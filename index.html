@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI RUSH: AR Competence Test</title>
+    <!-- 미래지향적 폰트 로드 -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-blue: #0066ff;
+            --neon-red: #ff0055;
+            --neon-yellow: #ffd700;
+            --glass-bg: rgba(10, 20, 30, 0.65);
+            --glass-border: rgba(0, 243, 255, 0.3);
+            --bg-dark: #050508;
+        }
+
+        body { margin: 0; overflow: hidden; background: var(--bg-dark); touch-action: none; color: #fff; font-family: 'Noto Sans KR', sans-serif; }
+        canvas { display: block; width: 100%; height: 100vh; }
+
+        /* --- AR HUD STYLES --- */
+        #ar-interface {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column;
+            perspective: 1000px; z-index: 10;
+        }
+
+        /* Top HUD Panel */
+        #hud-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.1);
+            padding: 20px;
+            transform-origin: top center;
+            transform: rotateX(10deg) translateY(-150%); /* Start hidden */
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: auto;
+            max-width: 800px; width: 95%; margin: 0 auto;
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
+            position: relative;
+        }
+        #hud-panel.active { transform: rotateX(0deg) translateY(0); }
+        
+        /* Holographic Scan Line */
+        #hud-panel::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--neon-cyan);
+            animation: scan 3s infinite linear; opacity: 0.5;
+        }
+        @keyframes scan { 0% { top: 0; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+        #q-header {
+            display: flex; justify-content: space-between; align-items: center;
+            font-family: 'Orbitron', sans-serif; margin-bottom: 10px;
+        }
+        #q-badge {
+            color: var(--neon-cyan); font-size: 0.9rem; letter-spacing: 2px;
+            border: 1px solid var(--neon-cyan); padding: 2px 8px; border-radius: 4px;
+        }
+        #q-timer { color: var(--neon-red); font-weight: 700; }
+
+        #q-title {
+            font-size: 1.15rem; font-weight: 700; line-height: 1.5; text-align: center;
+            margin-bottom: 15px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        .ar-options { display: flex; gap: 8px; justify-content: center; }
+        .ar-opt {
+            flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px; border-radius: 8px; font-size: 0.85rem; color: #ccc;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            transition: all 0.3s;
+        }
+        .ar-opt .num { 
+            font-family: 'Orbitron'; font-size: 1.2rem; color: var(--neon-cyan); margin-bottom: 4px; 
+        }
+
+        /* --- SCREENS --- */
+        .screen-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 8, 0.95); z-index: 100;
+            display: flex; flex-direction: column; align-items: center; overflow-y: auto;
+            pointer-events: auto;
+        }
+        .screen-content {
+            width: 100%; max-width: 700px; padding: 40px 20px; text-align: center;
+        }
+
+        /* Intro Style */
+        .glitch-title {
+            font-family: 'Orbitron', sans-serif; font-size: 4rem; font-weight: 900;
+            color: #fff; text-transform: uppercase; position: relative;
+            text-shadow: 2px 2px var(--neon-blue), -2px -2px var(--neon-red);
+            animation: glitch 1s infinite;
+        }
+        @keyframes glitch {
+            0% { transform: translate(0) } 20% { transform: translate(-2px, 2px) } 40% { transform: translate(-2px, -2px) } 60% { transform: translate(2px, 2px) } 80% { transform: translate(2px, -2px) } 100% { transform: translate(0) }
+        }
+
+        .btn-cyber {
+            background: transparent; border: 2px solid var(--neon-cyan); color: var(--neon-cyan);
+            padding: 15px 40px; font-family: 'Orbitron'; font-size: 1.2rem; font-weight: 700;
+            margin-top: 30px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+            position: relative; overflow: hidden; text-transform: uppercase; letter-spacing: 2px;
+        }
+        .btn-cyber:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 30px var(--neon-cyan); }
+
+        /* --- RESULT REPORT STYLES (AR Hologram) --- */
+        .report-grid {
+            display: grid; grid-template-columns: 1fr; gap: 20px; text-align: left;
+            margin-top: 30px;
+        }
+
+        .holo-card {
+            background: rgba(10, 15, 20, 0.6);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 10px; padding: 20px;
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+        .holo-card::before {
+            content: ''; position: absolute; top: -1px; left: -1px; width: 20px; height: 20px;
+            border-top: 2px solid var(--neon-cyan); border-left: 2px solid var(--neon-cyan);
+            border-radius: 10px 0 0 0;
+        }
+        .holo-card::after {
+            content: ''; position: absolute; bottom: -1px; right: -1px; width: 20px; height: 20px;
+            border-bottom: 2px solid var(--neon-cyan); border-right: 2px solid var(--neon-cyan);
+            border-radius: 0 0 10px 0;
+        }
+
+        .h-title {
+            font-family: 'Orbitron'; color: var(--neon-cyan); font-size: 0.9rem; margin-bottom: 15px;
+            display: flex; align-items: center; letter-spacing: 1px;
+        }
+        .h-title span { margin-right: 10px; font-size: 1.2rem; }
+
+        /* Radar Chart Container */
+        #radar-container {
+            display: flex; justify-content: center; align-items: center; height: 300px;
+            position: relative;
+        }
+        /* SVG Radar Chart */
+        .radar-svg { overflow: visible; width: 100%; height: 100%; }
+        .radar-axis { stroke: rgba(255,255,255,0.1); stroke-width: 1; }
+        .radar-web { stroke: rgba(255,255,255,0.1); stroke-width: 1; fill: none; }
+        .radar-area { fill: rgba(0, 243, 255, 0.2); stroke: var(--neon-cyan); stroke-width: 2; filter: drop-shadow(0 0 5px var(--neon-cyan)); }
+        .radar-label { fill: #aaa; font-size: 10px; font-family: 'Rajdhani'; text-anchor: middle; }
+
+        /* Wrong Answer Cards */
+        .wrong-item {
+            margin-bottom: 15px; border-left: 3px solid var(--neon-red);
+            background: rgba(255, 0, 85, 0.05); padding: 12px; border-radius: 0 8px 8px 0;
+        }
+        .w-tag { 
+            display: inline-block; font-size: 0.7rem; background: var(--neon-red); color: #fff; 
+            padding: 2px 6px; border-radius: 4px; margin-bottom: 5px; font-weight: bold; 
+        }
+        .w-q { font-size: 0.95rem; font-weight: 700; margin-bottom: 5px; color: #eee; }
+        .w-detail { display: flex; justify-content: space-between; font-size: 0.85rem; color: #aaa; }
+        .w-ans { color: var(--neon-cyan); font-weight: bold; }
+        .w-desc { font-size: 0.8rem; color: #888; margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); }
+
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* Action Plan Box */
+        .action-box {
+            background: linear-gradient(90deg, rgba(0, 243, 255, 0.1), transparent);
+            border-left: 4px solid var(--neon-cyan); padding: 15px;
+            font-size: 0.95rem; line-height: 1.5; color: #ddd;
+        }
+        .score-val { font-size: 3.5rem; font-family: 'Orbitron'; font-weight: 900; color: #fff; line-height: 1; }
+
+    </style>
+</head>
+<body>
+
+    <div style="position:relative; width:100%; height:100vh;">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div id="ar-interface">
+        <!-- HUD Panel -->
+        <div id="hud-panel">
+            <div id="q-header">
+                <span id="q-badge">SYSTEM ALERT</span>
+                <span id="q-timer">LIVE</span>
+            </div>
+            <div id="q-title">Loading Data Stream...</div>
+            <div class="ar-options" id="q-options">
+                <!-- Options JS Injected -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Intro Screen -->
+    <div id="intro-screen" class="screen-modal">
+        <div class="screen-content" style="height:100%; display:flex; flex-direction:column; justify-content:center;">
+            <div class="glitch-title">AI RUSH</div>
+            <div style="font-family:'Rajdhani'; font-size:1.5rem; letter-spacing:5px; color:var(--neon-cyan); margin-bottom:40px;">
+                AR SIMULATION
+            </div>
+            <div style="text-align:center; color:#888; font-size:0.9rem; line-height:1.6;">
+                NEURAL LINK ESTABLISHED.<br>
+                BLIND TEST SEQUENCE READY.
+            </div>
+            <button id="btn-start" class="btn-cyber">INITIATE</button>
+        </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="screen-modal hidden">
+        <div class="screen-content fade-in">
+            <div style="font-family:'Orbitron'; font-size:2rem; color:#fff; margin-bottom:20px;">
+                MISSION REPORT
+            </div>
+
+            <div class="report-grid">
+                <!-- 1. Score Card -->
+                <div class="holo-card" style="text-align:center;">
+                    <div class="h-title" style="justify-content:center;">TOTAL SYNCHRONIZATION</div>
+                    <div class="score-val" id="final-score">0%</div>
+                    <div id="rank-text" style="color:var(--neon-cyan); letter-spacing:2px; margin-top:5px;">CALCULATING...</div>
+                </div>
+
+                <!-- 2. Productivity -->
+                <div class="holo-card">
+                    <div class="h-title"><span>⚡</span> EFFICIENCY BOOST</div>
+                    <div style="font-size:0.9rem; color:#ccc;">
+                        현재 역량으로 하루 <span style="color:var(--neon-yellow); font-weight:bold;" id="time-save">0h</span> 단축 가능합니다.
+                        <br><span style="font-size:0.8rem; color:#666;">* Based on 8h workday simulation</span>
+                    </div>
+                </div>
+
+                <!-- 3. Radar Chart (New SVG) -->
+                <div class="holo-card">
+                    <div class="h-title"><span>📊</span> SKILL MATRIX</div>
+                    <div id="radar-container">
+                        <!-- SVG injected by JS -->
+                    </div>
+                    <div id="radar-feedback" style="text-align:center; font-size:0.85rem; color:#aaa; margin-top:10px;"></div>
+                </div>
+
+                <!-- 4. Action Plan -->
+                <div class="holo-card">
+                    <div class="h-title"><span>🚀</span> UPGRADE PATH</div>
+                    <div class="action-box" id="action-plan">Loading...</div>
+                </div>
+
+                <!-- 5. Wrong Answers -->
+                <div class="holo-card">
+                    <div class="h-title"><span>⚠️</span> ERROR LOG</div>
+                    <div id="wrong-list"></div>
+                </div>
+            </div>
+
+            <div style="margin-top:30px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+                <button class="btn-cyber" onclick="location.reload()" style="font-size:1rem; padding:12px 30px;">REBOOT</button>
+                <button class="btn-cyber" style="border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="window.open('#', '_blank')">
+                    ACCESS DATABASE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 외부 JavaScript 파일 로드 -->
+    <script src="js/extended_questions.js"></script>
+    <script src="js/question_selector.js"></script>
+
+    <script>
+        // --- DATA ---
+        const GAME_DATA = {
+            // 균형잡힌 랜덤 선택으로 10문제를 동적으로 로드
+            questions: [],
+            cats: {
+                'practical': '실무활용',
+                'prompt': '프롬프트',
+                'tools': '도구활용',
+                'ethics': '윤리보안',
+                'advanced': '고급기술',
+                'basic': '기초원리'
+            }
+        };
+
+        // --- ENGINE ---
+        const CONFIG = { lanes: [0.2, 0.5, 0.8], speed: 10 };
+        let canvas, ctx, animId;
+        let particles = [];
+        
+        const GAME = {
+            state: 'intro',
+            player: { lane: 1, x: 0.5, y: 0.85, tilt: 0 },
+            objects: [],
+            gridY: 0,
+            speed: 10,
+            quiz: { idx: 0, active: false, answers: [] }
+        };
+
+        function init() {
+            // 균형잡힌 문제 선택 시스템으로 문제 로드
+            console.log('Loading questions with balanced selection...');
+            GAME_DATA.questions = window.questionSelector.selectBalancedQuestions();
+            console.log(`Loaded ${GAME_DATA.questions.length} questions from ${Object.keys(EXTENDED_QUESTIONS).length} categories`);
+
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            resize();
+            window.addEventListener('resize', resize);
+
+            document.getElementById('btn-start').addEventListener('click', startGame);
+            
+            // Controls
+            window.addEventListener('keydown', e => {
+                if(GAME.state !== 'running') return;
+                if(e.key === 'ArrowLeft') move(-1);
+                if(e.key === 'ArrowRight') move(1);
+            });
+            canvas.addEventListener('pointerdown', e => {
+                if(GAME.state !== 'running') return;
+                move(e.clientX < canvas.width/2 ? -1 : 1);
+            });
+            
+            loop();
+        }
+
+        function startGame() {
+            document.getElementById('intro-screen').classList.add('hidden');
+            GAME.state = 'running';
+            GAME.quiz.answers = [];
+            GAME.quiz.idx = 0;
+            GAME.speed = 10;
+
+            // 새 게임마다 새로운 균형잡힌 문제 세트 생성
+            GAME_DATA.questions = window.questionSelector.selectBalancedQuestions();
+            console.log(`New game started with ${GAME_DATA.questions.length} balanced questions`);
+
+            // 이미 균형잡힌 선택이므로 그대로 사용 (추가 셔플 불필요)
+            GAME.data = [...GAME_DATA.questions];
+
+            setTimeout(startQuiz, 1500);
+        }
+
+        function move(dir) {
+            const n = GAME.player.lane + dir;
+            if(n >= 0 && n <= 2) GAME.player.lane = n;
+        }
+
+        function startQuiz() {
+            if(GAME.quiz.idx >= GAME.data.length) { endGame(); return; }
+            if(GAME.quiz.active) return;
+
+            const q = GAME.data[GAME.quiz.idx];
+            GAME.quiz.current = q;
+            GAME.quiz.active = true;
+
+            // AR HUD Update
+            const hud = document.getElementById('hud-panel');
+            document.getElementById('q-badge').innerText = `DATA BLOCK ${GAME.quiz.idx+1}`;
+            document.getElementById('q-title').innerText = q.title;
+            document.getElementById('q-options').innerHTML = q.options.map((o,i) => `
+                <div class="ar-opt">
+                    <div class="num">0${i+1}</div>
+                    <div>${o}</div>
+                </div>
+            `).join('');
+            
+            hud.classList.add('active');
+
+            // Spawn Gates
+            setTimeout(() => {
+                GAME.objects = []; // clear
+                for(let i=0; i<3; i++) {
+                    GAME.objects.push({
+                        type: 'gate', lane: i, y: -500, 
+                        label: (i+1).toString(), isCorrect: (i===q.correct), active: true
+                    });
+                }
+            }, 2000);
+        }
+
+        function update() {
+            GAME.gridY += GAME.speed * 0.5;
+            if(GAME.gridY > 50) GAME.gridY = 0;
+
+            if(GAME.state !== 'running') return;
+
+            // Player Lerp
+            const tx = CONFIG.lanes[GAME.player.lane];
+            GAME.player.x += (tx - GAME.player.x) * 0.15;
+            GAME.player.tilt = (tx - GAME.player.x) * -40;
+
+            // Objects
+            const h = canvas.height;
+            GAME.objects.forEach(o => {
+                o.y += GAME.speed;
+                if(o.active && o.y > h*0.75 && o.y < h*0.85) {
+                    const px = GAME.player.x * canvas.width;
+                    const ox = CONFIG.lanes[o.lane] * canvas.width;
+                    if(Math.abs(px-ox) < canvas.width*0.1) {
+                        o.active = false;
+                        handleHit(o);
+                    }
+                }
+            });
+
+            // Particles
+            particles.forEach(p => { p.y+=p.vy; p.x+=p.vx; p.life--; });
+            particles = particles.filter(p=>p.life>0);
+            
+            // Engine Trail
+            const px = GAME.player.x * canvas.width;
+            const py = GAME.player.y * canvas.height;
+            if(Math.random()>0.2) spawnParticle(px, py+40, '#00f3ff', 1);
+        }
+
+        function handleHit(gate) {
+            document.getElementById('hud-panel').classList.remove('active');
+            
+            const q = GAME.quiz.current;
+            GAME.quiz.answers.push({
+                ...q, userSel: gate.lane, correct: gate.isCorrect
+            });
+
+            if(gate.isCorrect) {
+                spawnExplosion(GAME.player.x*canvas.width, GAME.player.y*canvas.height, '#00f3ff');
+                GAME.speed = Math.min(GAME.speed + 1, 20);
+            } else {
+                spawnExplosion(GAME.player.x*canvas.width, GAME.player.y*canvas.height, '#ff0055');
+                screenShake();
+            }
+
+            GAME.quiz.active = false;
+            GAME.quiz.idx++;
+            setTimeout(startQuiz, 1000);
+        }
+
+        // --- RENDER ---
+        function draw() {
+            const w = canvas.width, h = canvas.height;
+            ctx.fillStyle = '#050508'; ctx.fillRect(0,0,w,h);
+
+            // 3D Grid Effect
+            ctx.strokeStyle = 'rgba(0, 243, 255, 0.2)'; ctx.lineWidth = 1;
+            // Perspective Lines
+            CONFIG.lanes.forEach(lx => {
+                const x = lx*w;
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+            });
+            // Horizontal Moving Lines
+            for(let y=GAME.gridY; y<h; y+=50) {
+                const alpha = y/h; // fade out at top
+                ctx.strokeStyle = `rgba(0, 243, 255, ${alpha * 0.3})`;
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+            }
+
+            // Particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color; ctx.globalAlpha = p.life/30;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            if(GAME.state !== 'running') return;
+
+            // Gates (Hologram)
+            GAME.objects.forEach(o => {
+                const x = CONFIG.lanes[o.lane]*w;
+                const gw = w*0.25;
+                
+                ctx.shadowBlur = 20; ctx.shadowColor = '#00f3ff';
+                ctx.strokeStyle = '#00f3ff'; ctx.lineWidth = 2;
+                
+                // Gate Frame
+                ctx.strokeRect(x-gw/2, o.y, gw, 10);
+                
+                // Number
+                ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; 
+                ctx.font = 'bold 40px Orbitron'; ctx.textAlign = 'center';
+                ctx.fillText(o.label, x, o.y-20);
+                
+                // Beam
+                const g = ctx.createLinearGradient(0, o.y, 0, o.y+150);
+                g.addColorStop(0, 'rgba(0, 243, 255, 0.3)');
+                g.addColorStop(1, 'transparent');
+                ctx.fillStyle = g; ctx.fillRect(x-gw/2, o.y, gw, 150);
+            });
+
+            // Player (Sci-Fi Fighter)
+            const px = GAME.player.x*w, py = GAME.player.y*h;
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.rotate(GAME.player.tilt * 0.03);
+            
+            // Glow
+            ctx.shadowBlur = 30; ctx.shadowColor = '#00f3ff';
+            
+            // Body
+            ctx.fillStyle = '#eee';
+            ctx.beginPath();
+            ctx.moveTo(0, -40); 
+            ctx.lineTo(20, 20); ctx.lineTo(0, 10); ctx.lineTo(-20, 20);
+            ctx.fill();
+            
+            // Cockpit
+            ctx.fillStyle = '#000';
+            ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(5, 5); ctx.lineTo(-5, 5); ctx.fill();
+            
+            ctx.restore(); ctx.shadowBlur = 0;
+        }
+
+        function loop() {
+            update(); draw(); animId = requestAnimationFrame(loop);
+        }
+        
+        // --- UTILS ---
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        function spawnParticle(x,y,c,n) {
+            for(let i=0; i<n; i++) particles.push({ x, y, vx:(Math.random()-0.5)*5, vy:Math.random()*5+2, life:30, color:c, size:Math.random()*3 });
+        }
+        function spawnExplosion(x,y,c) {
+            for(let i=0; i<30; i++) particles.push({ x, y, vx:(Math.random()-0.5)*15, vy:(Math.random()-0.5)*15, life:40, color:c, size:3 });
+        }
+        function screenShake() { canvas.style.transform = `translate(${Math.random()*10-5}px, ${Math.random()*10-5}px)`; setTimeout(()=>canvas.style.transform='none', 50); }
+
+        // --- REPORT GENERATION (SVG CHART) ---
+        function endGame() {
+            GAME.state = 'finished';
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            const answers = GAME.quiz.answers;
+            const score = Math.round((answers.filter(a=>a.correct).length / answers.length)*100);
+            
+            // Score
+            document.getElementById('final-score').innerText = score + "%";
+            let rank = "C - NOVICE";
+            if(score >= 90) rank = "S - ARCHITECT";
+            else if(score >= 70) rank = "A - ENGINEER";
+            else if(score >= 50) rank = "B - OPERATOR";
+            document.getElementById('rank-text').innerText = rank;
+            
+            document.getElementById('time-save').innerText = (score * 0.03).toFixed(1) + "h";
+
+            // Radar Chart Data
+            const cats = { 'basic':0, 'prompt':0, 'tool':0, 'ethics':0, 'advanced':0 };
+            const total = { 'basic':0, 'prompt':0, 'tool':0, 'ethics':0, 'advanced':0 };
+            
+            answers.forEach(a => {
+                total[a.cat]++;
+                if(a.correct) cats[a.cat]++;
+            });
+            
+            const chartData = Object.keys(cats).map(k => total[k] ? cats[k]/total[k] : 0);
+            renderSvgRadar(chartData, Object.keys(cats).map(k => GAME_DATA.cats[k]));
+
+            // Wrong List
+            const wrongs = answers.filter(a=>!a.correct);
+            const wBox = document.getElementById('wrong-list');
+            if(wrongs.length === 0) wBox.innerHTML = "<div style='text-align:center; color:var(--neon-cyan);'>NO ERRORS DETECTED. PERFECT RUN.</div>";
+            else {
+                wBox.innerHTML = wrongs.map(a => `
+                    <div class="wrong-item">
+                        <span class="w-tag">#${GAME_DATA.cats[a.cat]}</span>
+                        <div class="w-q">${a.title}</div>
+                        <div class="w-detail">
+                            <span>선택: ${a.options[a.userSel]}</span>
+                            <span class="w-ans">정답: ${a.options[a.correct]}</span>
+                        </div>
+                        <div class="w-desc">💡 ${a.desc}</div>
+                    </div>
+                `).join('');
+            }
+            
+            // Action Plan
+            const weak = Object.keys(cats).filter(k => total[k] && (cats[k]/total[k] < 0.6));
+            const planBox = document.getElementById('action-plan');
+            if(score === 100) planBox.innerHTML = "모든 모듈이 최적화되었습니다. AI 에이전트 개발 등 심화 과정으로 진입하십시오.";
+            else if(weak.length > 0) planBox.innerHTML = `시스템 취약점 감지: <b style='color:var(--neon-red)'>${weak.map(k=>GAME_DATA.cats[k]).join(', ')}</b><br>해당 영역에 대한 긴급 패치(보충 학습)가 권장됩니다.`;
+            else planBox.innerHTML = "전반적인 성능은 양호하나, 고급 기술(Advanced) 영역에서의 최적화가 필요합니다.";
+        }
+
+        function renderSvgRadar(data, labels) {
+            const size = 200;
+            const center = 100;
+            const radius = 80;
+            const count = data.length;
+            
+            let points = "";
+            let grid = "";
+            let labelText = "";
+            
+            // Generate Grid & Labels
+            for(let level=1; level<=3; level++) {
+                let levelPoints = "";
+                for(let i=0; i<count; i++) {
+                    const angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+                    const r = (radius / 3) * level;
+                    const x = center + r * Math.cos(angle);
+                    const y = center + r * Math.sin(angle);
+                    levelPoints += `${x},${y} `;
+                }
+                grid += `<polygon points="${levelPoints}" class="radar-web"/>`;
+            }
+
+            // Generate Data Polygon
+            data.forEach((val, i) => {
+                const angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+                const r = radius * (val || 0.1); // minimal visibility
+                const x = center + r * Math.cos(angle);
+                const y = center + r * Math.sin(angle);
+                points += `${x},${y} `;
+                
+                // Labels
+                const lx = center + (radius + 20) * Math.cos(angle);
+                const ly = center + (radius + 20) * Math.sin(angle);
+                labelText += `<text x="${lx}" y="${ly + 5}" class="radar-label">${labels[i]}</text>`;
+            });
+
+            document.getElementById('radar-container').innerHTML = `
+                <svg viewBox="0 0 200 200" class="radar-svg">
+                    ${grid}
+                    <polygon points="${points}" class="radar-area"/>
+                    ${labelText}
+                </svg>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
