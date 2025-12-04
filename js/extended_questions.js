@@ -1,2570 +1,896 @@
-// AI 활용 능력 진단 게임 - 확장 문제 데이터베이스
-// 10개 카테고리 × 30개 질문 (초급 10, 중급 10, 고급 10) = 총 300개 문제
+// 직무별 확장 문제 데이터 (각 직무 40문항)
+const ROLE_META = {
+  developer: {
+    label: "개발자",
+    domain: "코드/서비스",
+    asset: "API 명세·테스트 코드",
+    data: "에러 로그·요구사항",
+  },
+  marketer: {
+    label: "마케터",
+    domain: "캠페인/콘텐츠",
+    asset: "카피·랜딩·광고 소재",
+    data: "페르소나·성과 데이터",
+  },
+  sales: {
+    label: "영업",
+    domain: "제안/계약",
+    asset: "제안서·견적·영업 이메일",
+    data: "고객 요구·CRM 히스토리",
+  },
+  cs: {
+    label: "CS",
+    domain: "티켓/FAQ",
+    asset: "응대 스크립트·매뉴얼",
+    data: "티켓 로그·제품 변경사항",
+  },
+  designer: {
+    label: "디자이너",
+    domain: "디자인/브랜드",
+    asset: "와이어프레임·시안·디자인 시스템",
+    data: "요구사항·브랜드 가이드·리뷰",
+  },
+  general: {
+    label: "일반",
+    domain: "업무/학습",
+    asset: "보고서·메모·계획",
+    data: "회의록·참고 자료",
+  },
+};
 
-const EXTENDED_QUESTIONS = {
-  // 1. 실무 활용 (Practical Use)
+const EXP_BY_LEVEL = { beginner: 10, intermediate: 15, advanced: 22 };
+const CATEGORY_LIMIT = { beginner: 3, intermediate: 3, advanced: 2 };
+
+// 개발자 전용 고유 40문항
+const DEV_QUESTIONS = {
   practical: {
     beginner: [
       {
-        id: "prac_b1",
-        title: "AI로 이메일을 작성할 때 가장 효과적인 방법은?",
-        options: ["전체 내용을 AI가 작성하게 한다", "핵심 내용을 먼저 작성하고 AI로 다듬는다", "AI 없이 직접 작성한다"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "prac_b2",
-        title: "AI에게 코드 리뷰를 요청할 때 포함해야 할 정보는?",
-        options: ["코드만 복사해서 붙여넣기", "코드와 함께 목적과 컨텍스트 설명", "실행 결과만 보여주기"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "prac_b3",
-        title: "긴 문서를 AI로 요약할 때 최적의 방법은?",
-        options: ["전체를 한 번에 입력", "섹션별로 나누어 요약 후 통합", "첫 페이지만 요약"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "prac_b4",
-        title: "AI로 프레젠테이션을 준비할 때 순서는?",
-        options: ["AI가 전체 내용 생성 → 그대로 사용", "아웃라인 작성 → AI로 내용 보강", "이미지만 AI로 생성"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "prac_b5",
-        title: "AI로 데이터 분석을 요청할 때 가장 중요한 것은?",
-        options: ["데이터 형식과 구조를 명확히 설명", "파일 이름만 알려주기", "결과만 요구하기"],
+        id: "developer_practical_b1",
+        difficulty: "beginner",
+        title: "Copilot이 생성한 로그인 코드에 보안 취약점이 의심될 때 AI에게 먼저 시킬 일은?",
+        options: [
+          "OWASP 기준으로 취약점 후보를 나열하고 수정 패치를 제안하게 한다",
+          "UI 색상을 바꾸라고 지시한다",
+          "변수명을 더 짧게 줄이라고 한다",
+        ],
         correct: 0,
+        desc: "보안 체크리스트로 후보를 찾고, 수정안을 함께 받아야 빠르게 검증할 수 있다.",
         enemyType: "glitch",
-        exp: 10
+        concept: "보안 코드 리뷰",
+        whyCorrect:
+          "OWASP 같은 기준으로 의심 지점을 먼저 찾게 하면 놓치기 쉬운 인젝션, 취약한 인증 로직을 빠르게 좁힐 수 있다. 예를 들어 SQL 쿼리 조립 부분을 지목하게 하고, 준비된 구문으로 고친 패치까지 제안받으면 검증 속도가 빨라진다.",
+        whyWrong: {
+          1: "색상 변경은 보안과 무관해요. 겉모습을 고치기보다 취약점 후보부터 확인하는 편이 안전합니다.",
+          2: "변수명을 줄이면 코드가 간결해지지만 취약점이 사라지지는 않아요. 먼저 위험 부분을 찾고 수정안을 받는 게 효과적입니다.",
+        },
+        realWorldTip: "AI가 제안한 패치는 바로 적용 말고, 로컬/CI에서 보안 정적 분석과 함께 검증하세요.",
       },
       {
-        id: "prac_b6",
-        title: "AI로 번역 작업을 할 때 주의점은?",
-        options: ["직역만 요청", "문맥과 대상 독자를 함께 설명", "한 문장씩 번역"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "prac_b7",
-        title: "AI로 마케팅 카피를 작성할 때 필수 정보는?",
-        options: ["타겟 고객과 브랜드 톤앤매너", "경쟁사 카피 복사", "글자 수만 지정"],
+        id: "developer_practical_b2",
+        difficulty: "beginner",
+        title: "에러 로그를 AI로 요약할 때 최소로 제공해야 할 정보는?",
+        options: [
+          "스택트레이스와 발생한 입력/상황 요약",
+          "최근 팀 회식 사진",
+          "개발자 닉네임 목록",
+        ],
         correct: 0,
+        desc: "에러 위치와 재현 맥락이 있어야 요약이 유용하다.",
         enemyType: "glitch",
-        exp: 10
+        concept: "로그 요약 맥락",
+        whyCorrect:
+          "스택트레이스와 어떤 입력/상황에서 발생했는지 알려주면 AI가 핵심 원인을 빠르게 추려준다. 예를 들어 'PUT /orders/123, body {…}, 500, stack: …NullPointer'를 주면 재현까지 한 번에 확인할 수 있다.",
+        whyWrong: {
+          1: "사진은 분위기를 전하지만 오류와는 관련이 없어요. 필요한 정보만 주면 요약 품질이 올라갑니다.",
+          2: "닉네임 정보는 책임 추적엔 도움 될 수 있지만 원인 분석에는 직접적이지 않아요. 로그와 상황이 우선입니다.",
+        },
+        realWorldTip: "로그 요약 프롬프트에 '재현 단계 3줄'을 추가하면 티켓 작성 시간이 크게 줄어든다.",
       },
       {
-        id: "prac_b8",
-        title: "AI로 회의록을 작성하는 가장 효율적인 방법은?",
-        options: ["녹음 파일 직접 업로드", "메모를 정리해서 AI로 구조화", "AI가 실시간으로 참여"],
-        correct: 1,
+        id: "developer_practical_b3",
+        difficulty: "beginner",
+        title: "PR 설명을 AI로 작성할 때 반드시 포함해야 할 것은?",
+        options: [
+          "문제 상황, 핵심 변경점, 테스트 결과",
+          "PR 작성자의 점심 메뉴",
+          "좋아하는 라이브러리 순위",
+        ],
+        correct: 0,
+        desc: "문제-해결-검증 흐름을 적어야 리뷰어가 바로 이해한다.",
         enemyType: "glitch",
-        exp: 10
+        concept: "PR 문서화",
+        whyCorrect:
+          "어떤 문제를 해결했고 무엇을 바꿨으며 어떤 테스트를 통과했는지 적으면 리뷰어가 바로 판단할 수 있다. 예를 들어 '결제 재시도 무한루프 수정, 재시도 횟수 제한 추가, unit/integration 통과' 같은 구조가 유용하다.",
+        whyWrong: {
+          1: "점심 메뉴는 친근하지만 리뷰 판단에 도움 되지 않아요. 리뷰어 시간을 아끼려면 핵심 정보를 주는 게 좋습니다.",
+          2: "라이브러리 취향은 흥미롭지만 변경 의도나 영향도를 설명하지 않습니다. 리뷰 흐름에 필요한 정보만 넣어주세요.",
+        },
+        realWorldTip: "PR마다 '문제-해결-테스트' 서식을 템플릿으로 고정하고 AI가 채우게 하면 리뷰 속도가 빨라진다.",
       },
-      {
-        id: "prac_b9",
-        title: "AI로 보고서를 작성할 때 첫 단계는?",
-        options: ["전체 보고서를 AI가 작성", "목차와 구조를 먼저 잡기", "결론부터 작성"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "prac_b10",
-        title: "AI로 일정 관리를 할 때 효과적인 방법은?",
-        options: ["모든 일정을 AI가 결정", "우선순위를 정하고 AI로 최적화", "AI 사용 안함"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      }
     ],
-    intermediate: [
-      {
-        id: "prac_i1",
-        title: "복잡한 엑셀 수식을 AI로 생성할 때 베스트 프랙티스는?",
-        options: ["원하는 결과를 예시와 함께 설명", "수식만 요청", "VBA 매크로로 대체"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "prac_i2",
-        title: "AI로 SQL 쿼리를 작성할 때 제공해야 할 정보는?",
-        options: ["테이블명만", "테이블 구조, 관계, 원하는 결과", "데이터베이스 종류만"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "prac_i3",
-        title: "AI로 API 문서를 작성할 때 포함해야 할 요소는?",
-        options: ["엔드포인트, 파라미터, 응답 예시, 에러 처리", "URL만", "설명만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "prac_i4",
-        title: "AI로 테스트 케이스를 생성할 때 방법은?",
-        options: ["랜덤 생성", "기능 명세와 edge case 설명", "정상 케이스만"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "prac_i5",
-        title: "AI로 UX 카피라이팅을 할 때 고려사항은?",
-        options: ["문법만 체크", "사용자 시나리오와 감정 고려", "짧게만 작성"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "prac_i6",
-        title: "AI로 코드 리팩토링을 요청할 때 순서는?",
-        options: ["전체 코드 한번에 리팩토링", "목적 설명 → 단계별 개선", "변수명만 변경"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "prac_i7",
-        title: "AI로 데이터 시각화를 요청할 때 명시할 사항은?",
-        options: ["차트 종류, 축 설명, 인사이트 포인트", "색상만 지정", "데이터만 제공"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "prac_i8",
-        title: "AI로 프로젝트 리스크 분석을 할 때 방법은?",
-        options: ["AI가 모든 리스크 예측", "프로젝트 컨텍스트 제공 후 분석 요청", "일반적인 리스크만 확인"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "prac_i9",
-        title: "AI로 기술 문서를 작성할 때 구조는?",
-        options: ["개요 → 상세 → 예시 → FAQ", "상세 내용만", "코드만 포함"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "prac_i10",
-        title: "AI로 A/B 테스트를 설계할 때 필요한 정보는?",
-        options: ["테스트명만", "가설, 지표, 대상, 기간", "결과 예측만"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      }
-    ],
-    advanced: [
-      {
-        id: "prac_a1",
-        title: "AI로 마이크로서비스 아키텍처를 설계할 때 접근법은?",
-        options: ["요구사항 → 도메인 분석 → 서비스 분할 → 통신 설계", "서비스 개수만 정하기", "모놀리식으로 시작"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "prac_a2",
-        title: "AI로 머신러닝 파이프라인을 구축할 때 순서는?",
-        options: ["모델만 만들기", "데이터 준비 → 전처리 → 모델링 → 평가 → 배포", "정확도만 높이기"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "prac_a3",
-        title: "AI로 DevOps 자동화를 구현할 때 전략은?",
-        options: ["CI/CD 파이프라인 설계 → 모니터링 → 롤백 전략", "배포만 자동화", "수동 관리"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "prac_a4",
-        title: "AI로 보안 취약점 분석을 할 때 방법은?",
-        options: ["코드만 스캔", "OWASP 기준 → 코드 분석 → 펜테스팅 시나리오", "에러 메시지만 확인"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "prac_a5",
-        title: "AI로 분산 시스템을 디버깅할 때 접근법은?",
-        options: ["로그 수집 → 트레이싱 → 병목 분석 → 최적화", "에러만 확인", "재시작만 하기"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "prac_a6",
-        title: "AI로 블록체인 스마트 컨트랙트를 검증할 때는?",
-        options: ["코드만 확인", "비즈니스 로직 → 보안 → 가스 최적화", "배포만 하기"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "prac_a7",
-        title: "AI로 실시간 데이터 처리 시스템을 설계할 때는?",
-        options: ["스트림 처리 → 윈도우 → 집계 → 저장", "배치만 처리", "저장만 하기"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "prac_a8",
-        title: "AI로 성능 최적화를 할 때 프로세스는?",
-        options: ["코드만 수정", "프로파일링 → 병목 식별 → 최적화 → 검증", "하드웨어만 추가"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "prac_a9",
-        title: "AI로 다국어 시스템을 구현할 때 고려사항은?",
-        options: ["번역만 하기", "i18n 설계 → 문화적 차이 → RTL 지원 → 테스트", "영어만 지원"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "prac_a10",
-        title: "AI로 엔터프라이즈 통합을 설계할 때는?",
-        options: ["API 연동 → 데이터 매핑 → 오류 처리 → 모니터링", "직접 연결만", "수동 처리"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      }
-    ]
   },
-
-  // 2. AI 협업 (Collaboration)
-  collaboration: {
-    beginner: [
-      {
-        id: "collab_b1",
-        title: "AI와 인간의 역할 분담에서 AI가 잘하는 작업은?",
-        options: ["창의적 전략 수립", "대량 데이터 처리와 패턴 인식", "윤리적 판단"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "collab_b2",
-        title: "AI 결과물을 검증하는 첫 단계는?",
-        options: ["그대로 사용", "사실 확인과 출처 검증", "문법만 체크"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "collab_b3",
-        title: "팀에서 AI 도구를 도입할 때 우선 고려사항은?",
-        options: ["가격만 비교", "팀원 교육과 가이드라인 수립", "즉시 전면 도입"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "collab_b4",
-        title: "AI 생성 콘텐츠의 저작권은 누구에게 있나?",
-        options: ["AI 회사", "사용자와 플랫폼 약관에 따라 다름", "아무도 없음"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "collab_b5",
-        title: "AI와 협업할 때 인간이 반드시 해야 할 일은?",
-        options: ["모든 작업 위임", "최종 검토와 책임", "아무것도 안함"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "collab_b6",
-        title: "AI 도구를 팀에 소개할 때 방법은?",
-        options: ["강제 사용", "시범 사용 후 점진적 확대", "비밀로 사용"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "collab_b7",
-        title: "AI 결과물에 오류가 있을 때 대응은?",
-        options: ["무시하고 사용", "수정하고 피드백 제공", "AI 사용 중단"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "collab_b8",
-        title: "AI 협업 도구 선택 시 기준은?",
-        options: ["팀 워크플로우와의 호환성", "가장 비싼 것", "가장 유명한 것"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "collab_b9",
-        title: "AI로 생성한 코드를 팀에 공유할 때는?",
-        options: ["그대로 커밋", "리뷰와 테스트 후 공유", "비밀로 함"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "collab_b10",
-        title: "AI 도구 사용 가이드라인에 포함할 내용은?",
-        options: ["사용 목적과 범위, 주의사항", "비용만", "없어도 됨"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      }
-    ],
-    intermediate: [
-      {
-        id: "collab_i1",
-        title: "AI 페어 프로그래밍을 효과적으로 하는 방법은?",
-        options: ["AI가 모든 코드 작성", "개발자가 설계, AI가 구현 보조", "AI 사용 안함"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "collab_i2",
-        title: "AI 생성 문서를 팀 위키에 올릴 때 표기는?",
-        options: ["표기 없음", "AI 도움 받은 부분 명시", "작성자만 표기"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "collab_i3",
-        title: "팀 내 AI 활용도를 높이는 방법은?",
-        options: ["강제 할당", "성공 사례 공유와 워크샵", "개인 자율"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "collab_i4",
-        title: "AI 도구 ROI를 측정하는 지표는?",
-        options: ["시간 절감, 품질 향상, 비용 대비 효과", "사용 횟수만", "측정 안함"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "collab_i5",
-        title: "크로스펑셔널 팀에서 AI 도구 통합 방법은?",
-        options: ["부서별 다른 도구", "공통 플랫폼과 API 연동", "통합 안함"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "collab_i6",
-        title: "AI 기반 코드 리뷰 프로세스는?",
-        options: ["AI만 리뷰", "AI 1차 리뷰 → 인간 최종 리뷰", "인간만 리뷰"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "collab_i7",
-        title: "AI 협업 시 버전 관리 방법은?",
-        options: ["프롬프트와 결과물 함께 저장", "결과물만 저장", "저장 안함"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "collab_i8",
-        title: "AI 도구 간 데이터 연계 방법은?",
-        options: ["수동 복사", "API와 자동화 도구 활용", "연계 안함"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "collab_i9",
-        title: "AI 협업 품질 보증 프로세스는?",
-        options: ["체크리스트 → 검증 → 승인", "즉시 배포", "검증 안함"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "collab_i10",
-        title: "팀 AI 지식 관리 시스템 구축 방법은?",
-        options: ["개인별 관리", "중앙화된 프롬프트 라이브러리", "관리 안함"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      }
-    ],
-    advanced: [
-      {
-        id: "collab_a1",
-        title: "AI-Human 하이브리드 워크플로우 최적화 방법은?",
-        options: ["태스크 특성별 자동 라우팅 시스템", "수동 배분", "AI만 사용"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "collab_a2",
-        title: "글로벌 팀의 AI 협업 거버넌스 구축은?",
-        options: ["지역별 다른 정책", "통합 정책과 지역별 커스터마이징", "정책 없음"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "collab_a3",
-        title: "AI 기반 의사결정 지원 시스템 구현은?",
-        options: ["데이터 수집 → AI 분석 → 인간 검증 → 실행", "AI만 결정", "인간만 결정"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "collab_a4",
-        title: "엔터프라이즈 AI 협업 플랫폼 설계는?",
-        options: ["단일 도구만", "멀티모달 AI + 워크플로우 엔진 + 감사 로그", "개별 도구"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "collab_a5",
-        title: "AI 협업 성숙도 모델 5단계 중 최고 단계는?",
-        options: ["AI 실험", "AI 통합", "AI 기반 자율 최적화"],
-        correct: 2,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "collab_a6",
-        title: "AI 에이전트 오케스트레이션 패턴은?",
-        options: ["단일 에이전트", "계층적 에이전트 조정과 작업 분배", "무작위 실행"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "collab_a7",
-        title: "Human-in-the-loop ML 시스템 설계는?",
-        options: ["자동 학습만", "예측 → 인간 검증 → 피드백 루프", "수동 학습만"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "collab_a8",
-        title: "AI 협업 메트릭스와 KPI 설정은?",
-        options: ["효율성, 정확도, 협업 시너지 지수", "사용량만", "측정 안함"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "collab_a9",
-        title: "분산 AI 팀 코디네이션 전략은?",
-        options: ["중앙 집중식", "연합 학습과 엣지 컴퓨팅", "독립 운영"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "collab_a10",
-        title: "AI 협업 윤리 프레임워크 구축은?",
-        options: ["투명성, 책임성, 공정성, 프라이버시", "효율성만", "프레임워크 없음"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      }
-    ]
-  },
-
-  // 3. 한계 인식 (Limitations)
-  limitations: {
-    beginner: [
-      {
-        id: "limit_b1",
-        title: "AI가 할 수 없는 작업은?",
-        options: ["텍스트 생성", "실시간 인터넷 브라우징(기본 모델)", "번역"],
-        correct: 1,
-        enemyType: "hallucination",
-        exp: 10
-      },
-      {
-        id: "limit_b2",
-        title: "ChatGPT의 지식 cutoff date의 의미는?",
-        options: ["서비스 종료일", "학습 데이터의 마지막 날짜", "가입일"],
-        correct: 1,
-        enemyType: "hallucination",
-        exp: 10
-      },
-      {
-        id: "limit_b3",
-        title: "AI가 수학 문제를 틀리는 이유는?",
-        options: ["계산기가 없어서", "패턴 기반 예측이라 논리 연산에 약함", "일부러 틀림"],
-        correct: 1,
-        enemyType: "hallucination",
-        exp: 10
-      },
-      {
-        id: "limit_b4",
-        title: "긴 문서 처리 시 AI의 한계는?",
-        options: ["토큰 제한으로 전체 처리 불가", "느려짐", "거부함"],
-        correct: 0,
-        enemyType: "hallucination",
-        exp: 10
-      },
-      {
-        id: "limit_b5",
-        title: "AI가 이미지를 '이해'한다는 것의 실제 의미는?",
-        options: ["진짜 이해함", "패턴을 인식하고 라벨링", "보지 못함"],
-        correct: 1,
-        enemyType: "hallucination",
-        exp: 10
-      },
-      {
-        id: "limit_b6",
-        title: "AI가 개인정보를 기억하지 못하는 이유는?",
-        options: ["용량 부족", "프라이버시 보호 설계", "관심 없음"],
-        correct: 1,
-        enemyType: "hallucination",
-        exp: 10
-      },
-      {
-        id: "limit_b7",
-        title: "AI가 URL을 직접 방문할 수 없는 이유는?",
-        options: ["보안과 샌드박스 환경", "인터넷 없음", "거부함"],
-        correct: 0,
-        enemyType: "hallucination",
-        exp: 10
-      },
-      {
-        id: "limit_b8",
-        title: "AI의 '창의성'의 실체는?",
-        options: ["진짜 창의적", "학습 데이터의 재조합", "복사"],
-        correct: 1,
-        enemyType: "hallucination",
-        exp: 10
-      },
-      {
-        id: "limit_b9",
-        title: "AI가 감정을 표현할 때 실제로는?",
-        options: ["감정을 느낌", "언어 패턴을 모방", "거짓말"],
-        correct: 1,
-        enemyType: "hallucination",
-        exp: 10
-      },
-      {
-        id: "limit_b10",
-        title: "AI가 '모른다'고 답해야 하는 상황은?",
-        options: ["학습 데이터에 없는 정보", "어려운 질문", "쉬운 질문"],
-        correct: 0,
-        enemyType: "hallucination",
-        exp: 10
-      }
-    ],
-    intermediate: [
-      {
-        id: "limit_i1",
-        title: "Attention mechanism의 한계로 발생하는 문제는?",
-        options: ["긴 컨텍스트에서 중간 정보 손실", "속도 저하", "오류 없음"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "limit_i2",
-        title: "Few-shot learning의 한계는?",
-        options: ["예시가 많을수록 항상 좋음", "예시 품질과 다양성에 의존", "한계 없음"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "limit_i3",
-        title: "AI의 추론 능력 한계를 보여주는 예시는?",
-        options: ["번역", "인과관계 파악과 반사실적 추론", "요약"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "limit_i4",
-        title: "Tokenization이 야기하는 문제는?",
-        options: ["특수문자와 신조어 처리 어려움", "속도 향상", "문제 없음"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "limit_i5",
-        title: "AI의 일관성 문제가 발생하는 이유는?",
-        options: ["버그", "확률적 생성으로 인한 변동성", "의도적"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "limit_i6",
-        title: "멀티턴 대화에서 AI의 한계는?",
-        options: ["컨텍스트 누적과 모순 발생", "완벽함", "대화 거부"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "limit_i7",
-        title: "AI가 코드 실행 결과를 예측 못하는 이유는?",
-        options: ["실제 실행 환경 없이 패턴만 학습", "게으름", "코드 모름"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "limit_i8",
-        title: "도메인 특화 작업에서 AI 한계는?",
-        options: ["전문 용어와 맥락 이해 부족", "만능", "거부"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "limit_i9",
-        title: "AI의 시간 개념 한계는?",
-        options: ["과거/현재/미래 구분 완벽", "학습 시점 이후 정보 부재", "시간 여행 가능"],
-        correct: 1,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "limit_i10",
-        title: "Emergent ability의 예측 불가능성은?",
-        options: ["모델 크기에 따른 급격한 능력 변화", "선형 성장", "능력 감소"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      }
-    ],
-    advanced: [
-      {
-        id: "limit_a1",
-        title: "Transformer 아키텍처의 근본적 한계는?",
-        options: ["2차 복잡도로 인한 확장성 문제", "성능 완벽", "속도 빠름"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "limit_a2",
-        title: "AI의 Compositionality 문제란?",
-        options: ["복잡한 개념을 요소로 분해/조합하는 능력 부족", "작곡 능력", "문제 없음"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "limit_a3",
-        title: "Catastrophic forgetting 현상은?",
-        options: ["새 태스크 학습 시 기존 지식 손실", "기억력 향상", "잊지 않음"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "limit_a4",
-        title: "OOD(Out-of-Distribution) 일반화 실패는?",
-        options: ["학습 분포 밖 데이터 처리 실패", "완벽한 일반화", "분포 무관"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "limit_a5",
-        title: "Scaling law의 한계점은?",
-        options: ["무한 확장 가능", "컴퓨팅과 데이터의 물리적 한계", "한계 없음"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "limit_a6",
-        title: "Symbol grounding problem이란?",
-        options: ["기호와 실제 의미 연결 부재", "기호 인식 완벽", "문제 없음"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "limit_a7",
-        title: "AI의 Causal reasoning 한계는?",
-        options: ["상관관계와 인과관계 구분 실패", "완벽한 인과 추론", "추론 안함"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "limit_a8",
-        title: "Adversarial attack 취약성은?",
-        options: ["미세한 입력 변조로 오작동", "공격 면역", "보안 완벽"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "limit_a9",
-        title: "Gödel의 불완전성과 AI의 관계는?",
-        options: ["형식 체계 내 증명 불가능 명제 존재", "모든 것 증명 가능", "무관함"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "limit_a10",
-        title: "AI consciousness의 Hard Problem은?",
-        options: ["쉽게 해결", "주관적 경험(qualia)의 계산적 구현 불가능", "이미 의식 있음"],
-        correct: 1,
-        enemyType: "singularity_eye",
-        exp: 25
-      }
-    ]
-  },
-
-  // 4. 비용 최적화 (Cost Optimization)
-  cost_optimization: {
-    beginner: [
-      {
-        id: "cost_b1",
-        title: "AI API 사용료를 줄이는 가장 쉬운 방법은?",
-        options: ["짧고 명확한 프롬프트 사용", "긴 프롬프트 사용", "자주 호출"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "cost_b2",
-        title: "무료 AI 도구의 일반적인 제한사항은?",
-        options: ["사용 횟수와 기능 제한", "제한 없음", "유료보다 좋음"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "cost_b3",
-        title: "토큰(Token)이 비용과 관련된 이유는?",
-        options: ["상관없음", "API 요금이 토큰 수 기준", "토큰이 비쌈"],
-        correct: 1,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "cost_b4",
-        title: "캐싱을 통한 비용 절감 방법은?",
-        options: ["반복 질문 결과 저장 후 재사용", "매번 새로 요청", "캐싱 안함"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "cost_b5",
-        title: "모델 크기와 비용의 관계는?",
-        options: ["무관함", "큰 모델일수록 비용 증가", "작을수록 비쌈"],
-        correct: 1,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "cost_b6",
-        title: "배치 처리가 비용 효율적인 이유는?",
-        options: ["한 번에 여러 요청 처리", "개별 처리가 싸다", "차이 없음"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "cost_b7",
-        title: "AI 구독 서비스 선택 기준은?",
-        options: ["실제 사용량과 필요 기능", "가장 비싼 것", "가장 싼 것"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "cost_b8",
-        title: "오픈소스 AI 모델의 장점은?",
-        options: ["무료 사용과 커스터마이징 가능", "항상 최고 성능", "지원 완벽"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "cost_b9",
-        title: "AI 비용 모니터링이 중요한 이유는?",
-        options: ["예산 초과 방지", "필요 없음", "재미로"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "cost_b10",
-        title: "프리티어(Free tier) 활용 전략은?",
-        options: ["개발/테스트 용도로 활용", "프로덕션 사용", "사용 안함"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      }
-    ],
-    intermediate: [
-      {
-        id: "cost_i1",
-        title: "Rate limiting 우회 전략은?",
-        options: ["큐잉과 재시도 로직 구현", "무한 재시도", "포기"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "cost_i2",
-        title: "Fine-tuning vs Prompting 비용 비교는?",
-        options: ["초기 비용 높지만 장기적 절감 가능", "항상 프롬프팅이 싸다", "같음"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "cost_i3",
-        title: "멀티 테넌시로 비용 절감하는 방법은?",
-        options: ["여러 사용자가 리소스 공유", "개별 인스턴스", "불가능"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "cost_i4",
-        title: "Edge deployment의 비용 이점은?",
-        options: ["네트워크 비용 절감", "클라우드가 싸다", "차이 없음"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "cost_i5",
-        title: "Quantization을 통한 비용 절감은?",
-        options: ["모델 크기 축소로 인프라 비용 감소", "성능 향상", "비용 증가"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "cost_i6",
-        title: "Spot instance 활용 전략은?",
-        options: ["비중요 배치 작업에 활용", "실시간 서비스용", "사용 금지"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "cost_i7",
-        title: "API Gateway 패턴의 비용 이점은?",
-        options: ["요청 집계와 캐싱", "직접 호출이 싸다", "비용 증가"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "cost_i8",
-        title: "비용 기반 모델 라우팅이란?",
-        options: ["작업별로 적절한 모델 자동 선택", "항상 큰 모델", "항상 작은 모델"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "cost_i9",
-        title: "Serverless AI의 비용 모델은?",
-        options: ["사용한 만큼만 과금", "월 정액", "무료"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "cost_i10",
-        title: "비용 최적화 자동화 도구는?",
-        options: ["클라우드 비용 관리 플랫폼", "수동 관리", "필요 없음"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      }
-    ],
-    advanced: [
-      {
-        id: "cost_a1",
-        title: "FinOps for AI 구현 전략은?",
-        options: ["비용 가시화 → 최적화 → 자동화", "무계획", "고정 예산"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "cost_a2",
-        title: "Multi-cloud arbitrage 전략은?",
-        options: ["제공업체 간 가격 차이 활용", "단일 벤더", "온프레미스만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "cost_a3",
-        title: "Distillation을 통한 비용 최적화는?",
-        options: ["큰 모델 지식을 작은 모델로 전이", "모델 크기 증가", "성능 저하"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "cost_a4",
-        title: "Dynamic batching 최적화는?",
-        options: ["요청을 동적으로 묶어 처리", "개별 처리", "고정 배치"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "cost_a5",
-        title: "GPU sharing과 MIG 활용은?",
-        options: ["GPU 자원을 분할하여 활용도 극대화", "전용 GPU만", "CPU만 사용"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "cost_a6",
-        title: "Cascade inference 패턴은?",
-        options: ["쉬운 케이스는 작은 모델, 어려운 것만 큰 모델", "항상 큰 모델", "랜덤 선택"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "cost_a7",
-        title: "Reserved capacity 전략은?",
-        options: ["장기 약정으로 할인", "온디맨드만", "스팟만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "cost_a8",
-        title: "AI workload 스케줄링 최적화는?",
-        options: ["오프피크 시간 활용", "항상 실행", "랜덤 실행"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "cost_a9",
-        title: "Cost-aware AutoML이란?",
-        options: ["비용 제약 내에서 최적 모델 탐색", "성능만 고려", "비용 무시"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "cost_a10",
-        title: "Hybrid inference 아키텍처는?",
-        options: ["온프레미스 + 클라우드 최적 조합", "클라우드만", "온프렘만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      }
-    ]
-  },
-
-  // 5. API/자동화 (Automation)
-  automation: {
-    beginner: [
-      {
-        id: "auto_b1",
-        title: "API(Application Programming Interface)의 역할은?",
-        options: ["프로그램 간 통신 인터페이스", "사용자 인터페이스", "데이터베이스"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "auto_b2",
-        title: "API Key를 안전하게 관리하는 방법은?",
-        options: ["코드에 직접 입력", "환경 변수나 시크릿 관리 도구", "공개 저장소"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "auto_b3",
-        title: "Webhook의 기본 개념은?",
-        options: ["이벤트 발생 시 자동 알림", "수동 호출", "데이터베이스"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "auto_b4",
-        title: "노코드 자동화 도구의 장점은?",
-        options: ["프로그래밍 없이 자동화 구축", "코딩 필수", "수동 작업"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "auto_b5",
-        title: "Zapier, Make(Integromat)의 용도는?",
-        options: ["앱 간 자동화 워크플로우", "코드 에디터", "데이터베이스"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "auto_b6",
-        title: "크론(Cron) 표현식의 용도는?",
-        options: ["스케줄 작업 시간 설정", "API 호출", "데이터 저장"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "auto_b7",
-        title: "API Rate Limit의 의미는?",
-        options: ["시간당 호출 횟수 제한", "속도 향상", "무제한"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "auto_b8",
-        title: "REST API의 기본 메소드가 아닌 것은?",
-        options: ["GET", "POST", "CONNECT"],
-        correct: 2,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "auto_b9",
-        title: "자동화 워크플로우의 트리거는?",
-        options: ["작업을 시작하는 이벤트", "결과", "에러"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "auto_b10",
-        title: "API 응답 코드 200의 의미는?",
-        options: ["에러", "성공", "인증 필요"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      }
-    ],
-    intermediate: [
-      {
-        id: "auto_i1",
-        title: "GraphQL과 REST API의 주요 차이는?",
-        options: ["필요한 데이터만 요청 가능", "속도만 다름", "같음"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "auto_i2",
-        title: "OAuth 2.0 인증 플로우의 목적은?",
-        options: ["안전한 제3자 인증", "패스워드 저장", "익명 접근"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "auto_i3",
-        title: "API Gateway의 역할은?",
-        options: ["API 라우팅, 인증, 제한 관리", "데이터 저장", "UI 제공"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "auto_i4",
-        title: "Idempotency의 중요성은?",
-        options: ["중복 요청 시 같은 결과 보장", "속도 향상", "보안 강화"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "auto_i5",
-        title: "마이크로서비스 간 통신 패턴은?",
-        options: ["동기/비동기 메시징", "직접 DB 접근", "파일 공유"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "auto_i6",
-        title: "CI/CD 파이프라인 자동화 도구는?",
-        options: ["Jenkins, GitHub Actions", "Excel", "Word"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "auto_i7",
-        title: "Event-driven 아키텍처의 장점은?",
-        options: ["낮은 결합도와 확장성", "높은 결합도", "동기 처리"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "auto_i8",
-        title: "API Versioning 전략은?",
-        options: ["URL, 헤더, 쿼리 파라미터", "버전 없음", "매번 새 API"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "auto_i9",
-        title: "서킷 브레이커 패턴의 목적은?",
-        options: ["장애 전파 방지", "속도 향상", "비용 절감"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "auto_i10",
-        title: "API 문서 자동화 도구는?",
-        options: ["Swagger/OpenAPI", "메모장", "이메일"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      }
-    ],
-    advanced: [
-      {
-        id: "auto_a1",
-        title: "Event Sourcing 패턴의 구현은?",
-        options: ["모든 상태 변경을 이벤트로 저장", "현재 상태만 저장", "로그 없음"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "auto_a2",
-        title: "SAGA 패턴의 분산 트랜잭션 처리는?",
-        options: ["보상 트랜잭션으로 일관성 유지", "2PC 사용", "트랜잭션 없음"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "auto_a3",
-        title: "gRPC의 장점과 적용 시나리오는?",
-        options: ["고성능 바이너리 프로토콜, 마이크로서비스", "웹 브라우저용", "파일 전송만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "auto_a4",
-        title: "Chaos Engineering 자동화는?",
-        options: ["의도적 장애 주입으로 복원력 테스트", "버그 생성", "시스템 파괴"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "auto_a5",
-        title: "Service Mesh의 역할은?",
-        options: ["마이크로서비스 간 통신 관리", "UI 제공", "데이터 저장"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "auto_a6",
-        title: "CQRS 패턴 구현 시 고려사항은?",
-        options: ["읽기/쓰기 모델 분리와 일관성", "단일 모델", "캐시만 사용"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "auto_a7",
-        title: "Distributed Tracing 구현은?",
-        options: ["Correlation ID와 스팬 추적", "로그만 사용", "추적 안함"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "auto_a8",
-        title: "API 조합 패턴(BFF)의 설계는?",
-        options: ["클라이언트별 최적화된 백엔드", "단일 API", "직접 연결"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "auto_a9",
-        title: "Async API와 WebSocket 활용은?",
-        options: ["실시간 양방향 통신", "단방향만", "파일 전송만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "auto_a10",
-        title: "Zero-trust 자동화 아키텍처는?",
-        options: ["모든 요청 검증과 최소 권한", "완전 신뢰", "인증 없음"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      }
-    ]
-  },
-
-  // 6. 모델 선택 (Model Selection)
-  model_selection: {
-    beginner: [
-      {
-        id: "model_b1",
-        title: "GPT-4와 GPT-3.5의 주요 차이는?",
-        options: ["성능과 비용", "이름만 다름", "GPT-3.5가 더 좋음"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "model_b2",
-        title: "Claude의 특징은?",
-        options: ["긴 컨텍스트 윈도우", "짧은 답변만", "코딩 불가"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "model_b3",
-        title: "이미지 생성에 적합한 모델은?",
-        options: ["GPT-4", "DALL-E, Midjourney", "Claude"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "model_b4",
-        title: "코딩에 특화된 AI 모델은?",
-        options: ["GitHub Copilot", "DALL-E", "Whisper"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "model_b5",
-        title: "음성 인식 AI 모델은?",
-        options: ["Stable Diffusion", "Whisper", "GPT-4"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "model_b6",
-        title: "Gemini의 제공 회사는?",
-        options: ["OpenAI", "Google", "Meta"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "model_b7",
-        title: "오픈소스 LLM의 예시는?",
-        options: ["GPT-4", "LLaMA, Mistral", "Claude"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "model_b8",
-        title: "모델 크기(파라미터)가 클수록?",
-        options: ["일반적으로 성능 향상", "항상 나쁨", "상관없음"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "model_b9",
-        title: "실시간 응답이 중요할 때 선택은?",
-        options: ["가장 큰 모델", "작고 빠른 모델", "오프라인 모델"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "model_b10",
-        title: "특정 도메인 작업에는?",
-        options: ["범용 모델", "도메인 특화 모델", "아무거나"],
-        correct: 1,
-        enemyType: "glitch",
-        exp: 10
-      }
-    ],
-    intermediate: [
-      {
-        id: "model_i1",
-        title: "Few-shot vs Zero-shot 성능 차이는?",
-        options: ["예시 제공 시 성능 향상", "항상 같음", "Zero-shot이 좋음"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "model_i2",
-        title: "Instruction-tuned 모델의 장점은?",
-        options: ["지시사항 이해도 향상", "속도만 빠름", "작업 불가"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "model_i3",
-        title: "Mixture of Experts(MoE) 구조는?",
-        options: ["작업별 전문가 모델 활성화", "단일 모델", "앙상블"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "model_i4",
-        title: "Embedding 모델의 용도는?",
-        options: ["텍스트를 벡터로 변환", "이미지 생성", "음성 인식"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "model_i5",
-        title: "Constitutional AI의 특징은?",
-        options: ["윤리적 가이드라인 내장", "속도 우선", "정확도만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "model_i6",
-        title: "모델 앙상블의 효과는?",
-        options: ["여러 모델 조합으로 성능 향상", "단일 모델이 좋음", "속도 향상"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "model_i7",
-        title: "Retrieval 모델과 생성 모델 차이는?",
-        options: ["검색 vs 생성", "같은 것", "속도만 다름"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "model_i8",
-        title: "모델 선택 시 latency 고려 이유는?",
-        options: ["사용자 경험과 실시간성", "비용만 중요", "성능만 중요"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "model_i9",
-        title: "도메인 적응(Domain Adaptation)은?",
-        options: ["특정 분야에 모델 최적화", "일반화", "성능 저하"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "model_i10",
-        title: "모델 벤치마크의 한계는?",
-        options: ["실제 사용과 차이 가능", "완벽한 지표", "불필요"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      }
-    ],
-    advanced: [
-      {
-        id: "model_a1",
-        title: "Sparse 모델의 장단점은?",
-        options: ["효율성 높지만 구현 복잡", "항상 좋음", "사용 불가"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "model_a2",
-        title: "RLHF vs RLAIF 차이는?",
-        options: ["인간 피드백 vs AI 피드백", "같음", "속도만 다름"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "model_a3",
-        title: "Emergent abilities 예측 방법은?",
-        options: ["스케일링 법칙과 벤치마크", "불가능", "랜덤"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "model_a4",
-        title: "Multi-modal 모델 통합 전략은?",
-        options: ["크로스 어텐션과 퓨전", "독립 처리", "텍스트만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "model_a5",
-        title: "Continual Learning 구현 시 과제는?",
-        options: ["Catastrophic forgetting 방지", "쉬움", "불필요"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "model_a6",
-        title: "모델 압축 기법 선택 기준은?",
-        options: ["정확도 손실 vs 속도 향상", "항상 압축", "압축 안함"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "model_a7",
-        title: "Federated Learning 적용 시나리오는?",
-        options: ["프라이버시 보호 필요 시", "중앙 집중식이 좋음", "불가능"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "model_a8",
-        title: "Neural Architecture Search는?",
-        options: ["자동으로 최적 구조 탐색", "수동 설계", "고정 구조"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "model_a9",
-        title: "Adaptive computation의 구현은?",
-        options: ["입력 복잡도에 따라 연산 조절", "고정 연산", "무한 연산"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "model_a10",
-        title: "모델 선택 자동화 시스템은?",
-        options: ["메타러닝과 AutoML", "수동 선택", "랜덤 선택"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      }
-    ]
-  },
-
-  // 7. 보안/규제 (Security & Compliance)
-  security: {
-    beginner: [
-      {
-        id: "sec_b1",
-        title: "AI에 개인정보 입력 시 주의점은?",
-        options: ["민감정보 제거 후 입력", "모두 입력", "암호화만 하면 안전"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 10
-      },
-      {
-        id: "sec_b2",
-        title: "공용 AI 서비스의 데이터 처리는?",
-        options: ["학습에 사용될 가능성", "절대 안전", "로컬 저장"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 10
-      },
-      {
-        id: "sec_b3",
-        title: "GDPR이 AI 사용에 미치는 영향은?",
-        options: ["개인정보 처리 제한", "영향 없음", "AI 금지"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 10
-      },
-      {
-        id: "sec_b4",
-        title: "AI 생성물의 법적 책임은?",
-        options: ["사용자에게 있음", "AI 회사만", "책임 없음"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 10
-      },
-      {
-        id: "sec_b5",
-        title: "기업 데이터를 AI에 사용할 때는?",
-        options: ["보안 정책 확인 필수", "자유롭게 사용", "금지"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 10
-      },
-      {
-        id: "sec_b6",
-        title: "AI 서비스 약관의 중요성은?",
-        options: ["데이터 사용 권한 명시", "중요하지 않음", "읽지 않아도 됨"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 10
-      },
-      {
-        id: "sec_b7",
-        title: "프롬프트 인젝션 공격이란?",
-        options: ["악의적 입력으로 AI 조작", "성능 향상", "정상 사용"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 10
-      },
-      {
-        id: "sec_b8",
-        title: "AI 사용 로그 보관 이유는?",
-        options: ["감사와 문제 추적", "불필요", "속도 향상"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 10
-      },
-      {
-        id: "sec_b9",
-        title: "의료 데이터와 AI 사용 시 규제는?",
-        options: ["HIPAA 등 준수", "자유 사용", "규제 없음"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 10
-      },
-      {
-        id: "sec_b10",
-        title: "AI 모델 접근 권한 관리는?",
-        options: ["역할 기반 접근 제어", "모두 공개", "접근 불가"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 10
-      }
-    ],
-    intermediate: [
-      {
-        id: "sec_i1",
-        title: "Differential Privacy의 적용은?",
-        options: ["개인정보 보호하며 학습", "완전 공개", "학습 불가"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 15
-      },
-      {
-        id: "sec_i2",
-        title: "Model extraction 공격 방어는?",
-        options: ["Rate limiting과 워터마킹", "방어 불가", "공개"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 15
-      },
-      {
-        id: "sec_i3",
-        title: "AI 감사(Audit) 프레임워크는?",
-        options: ["입력, 처리, 출력 전체 추적", "출력만 확인", "감사 불필요"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 15
-      },
-      {
-        id: "sec_i4",
-        title: "Homomorphic encryption의 역할은?",
-        options: ["암호화된 상태로 연산", "복호화 후 처리", "암호화 불가"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 15
-      },
-      {
-        id: "sec_i5",
-        title: "AI 윤리 위원회의 역할은?",
-        options: ["AI 사용 가이드라인 수립", "개발만", "불필요"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 15
-      },
-      {
-        id: "sec_i6",
-        title: "Data poisoning 공격 탐지는?",
-        options: ["이상치 탐지와 검증", "불가능", "무시"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 15
-      },
-      {
-        id: "sec_i7",
-        title: "AI 시스템 침투 테스트는?",
-        options: ["Red teaming과 adversarial testing", "불필요", "자동 안전"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 15
-      },
-      {
-        id: "sec_i8",
-        title: "Cross-border 데이터 규제는?",
-        options: ["국가별 규제 준수", "자유 이동", "금지"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 15
-      },
-      {
-        id: "sec_i9",
-        title: "AI 보안 인증 표준은?",
-        options: ["ISO/IEC 27001, SOC 2", "없음", "불필요"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 15
-      },
-      {
-        id: "sec_i10",
-        title: "Supply chain 보안 고려사항은?",
-        options: ["모델과 데이터 출처 검증", "무시", "자동 안전"],
-        correct: 0,
-        enemyType: "security_bot",
-        exp: 15
-      }
-    ],
-    advanced: [
-      {
-        id: "sec_a1",
-        title: "Zero-knowledge proof in AI는?",
-        options: ["지식 공개 없이 검증", "모두 공개", "검증 불가"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "sec_a2",
-        title: "Secure multi-party computation은?",
-        options: ["데이터 공유 없이 협업 학습", "데이터 공유 필수", "협업 불가"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "sec_a3",
-        title: "AI 규제 샌드박스의 목적은?",
-        options: ["혁신과 규제 균형", "완전 규제", "규제 없음"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "sec_a4",
-        title: "Explainable AI와 규제 준수는?",
-        options: ["의사결정 투명성 보장", "블랙박스 유지", "설명 불필요"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "sec_a5",
-        title: "AI 보안 위협 모델링(STRIDE)은?",
-        options: ["체계적 위협 식별과 대응", "랜덤 대응", "위협 없음"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "sec_a6",
-        title: "Confidential computing 적용은?",
-        options: ["TEE에서 안전한 AI 실행", "일반 환경", "클라우드만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "sec_a7",
-        title: "AI 거버넌스 프레임워크는?",
-        options: ["정책, 프로세스, 기술 통합", "기술만", "정책만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "sec_a8",
-        title: "Adversarial robustness 인증은?",
-        options: ["공격 저항성 정량 평가", "불가능", "불필요"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "sec_a9",
-        title: "AI 사고 대응(Incident Response)은?",
-        options: ["탐지 → 격리 → 복구 → 분석", "무시", "재시작만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "sec_a10",
-        title: "Quantum-resistant AI 보안은?",
-        options: ["포스트퀀텀 암호화 적용", "현재 암호화 충분", "보안 불필요"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      }
-    ]
-  },
-
-  // 8. 최신 트렌드 (Trends)
-  trends: {
-    beginner: [
-      {
-        id: "trend_b1",
-        title: "AI Agent의 기본 개념은?",
-        options: ["자율적으로 작업 수행하는 AI", "단순 챗봇", "검색 엔진"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "trend_b2",
-        title: "Vector Database의 용도는?",
-        options: ["임베딩 저장과 유사도 검색", "일반 데이터 저장", "이미지만 저장"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "trend_b3",
-        title: "Function Calling의 의미는?",
-        options: ["AI가 외부 도구 호출", "전화 걸기", "프로그래밍만"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "trend_b4",
-        title: "AI 플러그인의 역할은?",
-        options: ["AI 기능 확장", "속도 향상만", "보안만"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "trend_b5",
-        title: "Prompt chaining이란?",
-        options: ["여러 프롬프트 연결 실행", "단일 프롬프트", "프롬프트 삭제"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "trend_b6",
-        title: "AI 음성 클로닝의 활용은?",
-        options: ["콘텐츠 제작과 더빙", "전화만", "불가능"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "trend_b7",
-        title: "Generative AI의 범위는?",
-        options: ["텍스트, 이미지, 음성, 비디오", "텍스트만", "이미지만"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "trend_b8",
-        title: "AI 코파일럿의 의미는?",
-        options: ["작업 보조 AI 도구", "자동 조종사", "게임"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "trend_b9",
-        title: "Edge AI의 장점은?",
-        options: ["낮은 지연시간과 프라이버시", "클라우드가 빠름", "비용 높음"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "trend_b10",
-        title: "AI 민주화의 의미는?",
-        options: ["누구나 AI 접근 가능", "투표로 결정", "제한적 사용"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      }
-    ],
-    intermediate: [
-      {
-        id: "trend_i1",
-        title: "LangChain의 핵심 기능은?",
-        options: ["LLM 앱 개발 프레임워크", "언어 번역", "체인 관리"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "trend_i2",
-        title: "Semantic search vs Keyword search는?",
-        options: ["의미 이해 vs 단어 매칭", "같음", "속도만 다름"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "trend_i3",
-        title: "AutoGPT의 작동 방식은?",
-        options: ["목표 설정 후 자율 실행", "수동 제어", "단일 작업만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "trend_i4",
-        title: "Embedding의 차원 축소 이유는?",
-        options: ["계산 효율성과 노이즈 제거", "품질 향상", "크기 증가"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "trend_i5",
-        title: "AI의 Tool use 능력이란?",
-        options: ["계산기, 브라우저 등 도구 활용", "대화만", "생성만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "trend_i6",
-        title: "Synthetic data의 활용은?",
-        options: ["AI로 생성한 학습 데이터", "실제 데이터만", "사용 금지"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "trend_i7",
-        title: "LoRA 파인튜닝의 장점은?",
-        options: ["적은 파라미터로 효율적 학습", "전체 재학습", "성능 저하"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "trend_i8",
-        title: "Vision-Language 모델의 응용은?",
-        options: ["이미지 설명, 시각적 질의응답", "텍스트만", "이미지만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "trend_i9",
-        title: "AI의 Code interpreter 기능은?",
-        options: ["코드 실행과 결과 분석", "설명만", "컴파일만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "trend_i10",
-        title: "Neuro-symbolic AI의 접근법은?",
-        options: ["신경망과 기호 추론 결합", "신경망만", "기호만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      }
-    ],
-    advanced: [
-      {
-        id: "trend_a1",
-        title: "Transformer 이후 아키텍처 혁신은?",
-        options: ["Mamba, RWKV 등 선형 복잡도", "Transformer만", "CNN 회귀"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "trend_a2",
-        title: "World model의 구현 방향은?",
-        options: ["물리 법칙과 인과관계 학습", "텍스트만", "이미지만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "trend_a3",
-        title: "Multiagent 시스템 설계는?",
-        options: ["협력과 경쟁 메커니즘", "단일 에이전트", "독립 실행"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "trend_a4",
-        title: "Embodied AI의 도전 과제는?",
-        options: ["물리 세계 상호작용과 학습", "시뮬레이션만", "텍스트만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "trend_a5",
-        title: "Diffusion model의 혁신은?",
-        options: ["고품질 생성과 제어성", "GAN만 사용", "속도만 중요"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "trend_a6",
-        title: "AI의 Self-improvement 메커니즘은?",
-        options: ["자기 생성 데이터로 재학습", "고정 모델", "외부 데이터만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "trend_a7",
-        title: "Neuromorphic computing과 AI는?",
-        options: ["뇌 모방 하드웨어로 효율성", "기존 GPU만", "CPU로 충분"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "trend_a8",
-        title: "AI의 Recursive self-improvement 위험은?",
-        options: ["통제 불가능한 능력 향상", "안전함", "불가능"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "trend_a9",
-        title: "Quantum ML의 잠재력은?",
-        options: ["지수적 속도 향상 가능성", "느림", "고전이 빠름"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "trend_a10",
-        title: "AGI 달성의 주요 마일스톤은?",
-        options: ["일반화, 전이학습, 자율성", "현재 달성", "불가능"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      }
-    ]
-  },
-
-  // 9. 평가/벤치마크 (Evaluation)
-  evaluation: {
-    beginner: [
-      {
-        id: "eval_b1",
-        title: "AI 답변의 정확도를 평가하는 첫 단계는?",
-        options: ["사실 확인과 출처 검증", "믿고 사용", "속도만 확인"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "eval_b2",
-        title: "A/B 테스트의 목적은?",
-        options: ["두 버전 비교로 개선", "하나만 테스트", "테스트 안함"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "eval_b3",
-        title: "Human evaluation이 필요한 이유는?",
-        options: ["주관적 품질 평가", "자동화 완벽", "불필요"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "eval_b4",
-        title: "벤치마크 점수의 한계는?",
-        options: ["실제 성능과 차이 가능", "완벽한 지표", "무의미"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "eval_b5",
-        title: "프롬프트 성능 측정 지표는?",
-        options: ["정확도, 관련성, 완성도", "속도만", "길이만"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "eval_b6",
-        title: "일관성(Consistency) 평가란?",
-        options: ["같은 질문에 일관된 답변", "다양한 답변", "랜덤"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "eval_b7",
-        title: "AI 편향성 테스트 방법은?",
-        options: ["다양한 그룹별 결과 비교", "한 그룹만", "테스트 불필요"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "eval_b8",
-        title: "응답 시간 측정이 중요한 이유는?",
-        options: ["사용자 경험 영향", "상관없음", "느릴수록 좋음"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "eval_b9",
-        title: "False positive vs False negative는?",
-        options: ["잘못된 긍정 vs 잘못된 부정", "같은 것", "좋은 결과"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      },
-      {
-        id: "eval_b10",
-        title: "Ground truth의 의미는?",
-        options: ["검증된 정답 데이터", "예측값", "추정값"],
-        correct: 0,
-        enemyType: "glitch",
-        exp: 10
-      }
-    ],
-    intermediate: [
-      {
-        id: "eval_i1",
-        title: "BLEU, ROUGE 점수의 용도는?",
-        options: ["기계 번역과 요약 평가", "이미지 평가", "속도 측정"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "eval_i2",
-        title: "Perplexity 지표의 의미는?",
-        options: ["모델의 예측 불확실성", "정확도", "속도"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "eval_i3",
-        title: "Inter-annotator agreement란?",
-        options: ["평가자 간 일치도", "모델 성능", "데이터 크기"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "eval_i4",
-        title: "Ablation study의 목적은?",
-        options: ["구성 요소별 기여도 분석", "전체 테스트", "성능 향상"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "eval_i5",
-        title: "Cross-validation의 장점은?",
-        options: ["과적합 방지와 일반화 평가", "속도 향상", "데이터 절약"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "eval_i6",
-        title: "Calibration의 중요성은?",
-        options: ["신뢰도와 정확도 일치", "속도만 중요", "불필요"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "eval_i7",
-        title: "Online evaluation vs Offline은?",
-        options: ["실제 사용 vs 테스트 환경", "같은 것", "온라인만 중요"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "eval_i8",
-        title: "Holdout set의 역할은?",
-        options: ["최종 성능 평가용 데이터", "학습용", "검증용"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "eval_i9",
-        title: "Confusion matrix 분석은?",
-        options: ["분류 성능 상세 분석", "단순 정확도", "속도 측정"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "eval_i10",
-        title: "Statistical significance 테스트는?",
-        options: ["결과의 우연성 검증", "불필요", "항상 유의미"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      }
-    ],
-    advanced: [
-      {
-        id: "eval_a1",
-        title: "Counterfactual evaluation이란?",
-        options: ["가상 시나리오로 인과관계 평가", "실제만 평가", "예측만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "eval_a2",
-        title: "Adversarial evaluation의 목적은?",
-        options: ["모델 취약점 발견", "일반 성능만", "속도 테스트"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "eval_a3",
-        title: "Meta-evaluation 프레임워크는?",
-        options: ["평가 방법 자체를 평가", "단일 평가", "평가 안함"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "eval_a4",
-        title: "Behavioral testing의 접근법은?",
-        options: ["특정 행동 패턴 체계적 검증", "랜덤 테스트", "성능만 측정"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "eval_a5",
-        title: "Robustness 평가 방법론은?",
-        options: ["노이즈와 변형에 대한 저항성", "정확도만", "속도만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "eval_a6",
-        title: "Interpretability 평가 지표는?",
-        options: ["설명 충실도와 이해도", "성능만", "크기만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "eval_a7",
-        title: "Compositional generalization 테스트는?",
-        options: ["새로운 조합에 대한 일반화", "암기 테스트", "속도 측정"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "eval_a8",
-        title: "Fairness 메트릭스 선택은?",
-        options: ["도메인과 공정성 정의에 따라", "하나만 사용", "불필요"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "eval_a9",
-        title: "Continual evaluation 시스템은?",
-        options: ["배포 후 지속적 모니터링", "일회성 테스트", "배포 전만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "eval_a10",
-        title: "Evaluation data contamination은?",
-        options: ["테스트 데이터 학습 포함 문제", "좋은 현상", "무관함"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      }
-    ]
-  },
-
-  // 10. 산업별 특화 (Industry Specific)
-  industry: {
-    beginner: [
-      {
-        id: "ind_b1",
-        title: "마케팅에서 AI 활용 사례는?",
-        options: ["개인화 추천과 광고 카피", "제조만", "사용 안함"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "ind_b2",
-        title: "교육 분야 AI 활용은?",
-        options: ["맞춤형 학습과 평가", "일률적 교육", "사용 금지"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "ind_b3",
-        title: "의료 AI의 주요 활용은?",
-        options: ["진단 보조와 약물 개발", "치료만", "사용 안함"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "ind_b4",
-        title: "금융 AI의 용도는?",
-        options: ["사기 탐지와 리스크 평가", "거래만", "사용 금지"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "ind_b5",
-        title: "제조업 AI 활용은?",
-        options: ["품질 관리와 예측 정비", "생산만", "사용 안함"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "ind_b6",
-        title: "리테일 AI의 역할은?",
-        options: ["재고 관리와 수요 예측", "판매만", "불필요"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "ind_b7",
-        title: "법률 분야 AI 활용은?",
-        options: ["문서 검토와 판례 분석", "재판만", "사용 금지"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "ind_b8",
-        title: "농업 AI의 적용은?",
-        options: ["작물 모니터링과 수확 예측", "파종만", "사용 안함"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "ind_b9",
-        title: "물류 AI 최적화는?",
-        options: ["경로 최적화와 배송 예측", "운송만", "불필요"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      },
-      {
-        id: "ind_b10",
-        title: "부동산 AI 활용은?",
-        options: ["가격 예측과 매물 추천", "거래만", "사용 안함"],
-        correct: 0,
-        enemyType: "legacy_tool",
-        exp: 10
-      }
-    ],
-    intermediate: [
-      {
-        id: "ind_i1",
-        title: "Programmatic advertising AI는?",
-        options: ["실시간 입찰과 타겟팅 자동화", "수동 광고", "TV 광고만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "ind_i2",
-        title: "Adaptive learning 시스템은?",
-        options: ["학습자 수준에 맞춰 조절", "고정 커리큘럼", "교사만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "ind_i3",
-        title: "의료 영상 AI의 정확도는?",
-        options: ["특정 분야는 전문의 수준", "항상 부정확", "사용 불가"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "ind_i4",
-        title: "알고리즘 트레이딩의 특징은?",
-        options: ["밀리초 단위 자동 거래", "수동 거래", "하루 한 번"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "ind_i5",
-        title: "Digital twin in 제조업은?",
-        options: ["실시간 시뮬레이션과 최적화", "단순 모니터링", "도면만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "ind_i6",
-        title: "Dynamic pricing AI는?",
-        options: ["수요-공급 실시간 가격 조정", "고정 가격", "할인만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "ind_i7",
-        title: "Legal AI의 한계는?",
-        options: ["법적 조언은 변호사만 가능", "완전 대체", "제한 없음"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "ind_i8",
-        title: "Precision agriculture AI는?",
-        options: ["드론과 센서로 정밀 농업", "전통 농법", "추측만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "ind_i9",
-        title: "Last-mile delivery 최적화는?",
-        options: ["AI 경로와 드론/로봇 배송", "트럭만", "도보만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      },
-      {
-        id: "ind_i10",
-        title: "PropTech AI 혁신은?",
-        options: ["가상 투어와 자동 계약", "오프라인만", "중개인만"],
-        correct: 0,
-        enemyType: "prompt_eater",
-        exp: 15
-      }
-    ],
-    advanced: [
-      {
-        id: "ind_a1",
-        title: "Attribution modeling in 마케팅은?",
-        options: ["다채널 기여도 AI 분석", "단일 채널만", "추측만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "ind_a2",
-        title: "교육 AI의 윤리적 과제는?",
-        options: ["편향, 프라이버시, 공정성", "기술만 중요", "문제 없음"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "ind_a3",
-        title: "AI 신약 개발 플랫폼은?",
-        options: ["분자 설계와 임상 예측", "실험만", "불가능"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "ind_a4",
-        title: "RegTech AI 컴플라이언스는?",
-        options: ["규제 자동 모니터링과 보고", "수동 확인", "무시"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "ind_a5",
-        title: "Industry 4.0 AI 통합은?",
-        options: ["IoT, AI, 로봇 융합", "자동화만", "IT만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "ind_a6",
-        title: "Omnichannel AI 전략은?",
-        options: ["모든 채널 통합 고객 경험", "온라인만", "오프라인만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "ind_a7",
-        title: "Judicial AI의 미래는?",
-        options: ["보조 도구로 제한적 활용", "판사 대체", "사용 금지"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "ind_a8",
-        title: "Climate-smart agriculture AI는?",
-        options: ["기후 변화 대응 최적 재배", "전통 농법만", "포기"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "ind_a9",
-        title: "Autonomous logistics 생태계는?",
-        options: ["자율 차량, 드론, 로봇 통합", "사람만", "트럭만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      },
-      {
-        id: "ind_a10",
-        title: "Smart city 부동산 AI는?",
-        options: ["도시 데이터 통합 분석", "건물만", "토지만"],
-        correct: 0,
-        enemyType: "singularity_eye",
-        exp: 25
-      }
-    ]
-  }
 };
 
-// 난이도별 적 타입 매핑
-const ENEMY_MAPPING = {
-  beginner: ["glitch", "hallucination"],
-  intermediate: ["prompt_eater", "legacy_tool"],
-  advanced: ["security_bot", "singularity_eye"]
+// 아직 미완성 - 추후 나머지 문제 추가 예정
+
+const BASE_TEMPLATES = {
+  practical: [
+    {
+      id: "prac_b1",
+      difficulty: "beginner",
+      title: "AI로 {ASSET} 초안을 만들 때 먼저 챙길 정보는?",
+      options: ["목표·대상·제약 조건", "색상 테마", "이모지/말투만 지정"],
+      correct: 0,
+      desc: "목표와 대상, 제약을 명시해야 산출물이 맞는다.",
+      enemyType: "glitch",
+      concept: "요구사항 맥락 세팅",
+      whyCorrect:
+        "AI가 방향을 잡으려면 목적, 읽는 사람, 분량·규정 같은 제약을 먼저 줘야 한다. 예를 들어 {ROLE}가 내부 {ASSET}을 만들 때 'QA팀용, 1페이지, 테스트 범위 명시'를 알려주면 재작업이 줄어든다.",
+      whyWrong: {
+        1: "색상 테마를 먼저 떠올리기 쉽지만, 목표나 독자가 없으면 AI가 길을 잃어요. 디자인보다 방향을 먼저 잡아야 산출물이 일관됩니다.",
+        2: "말투만 정하면 친근해 보일 수 있지만, 무엇을 위해 쓰는지 정보가 없어 결과가 제각각 나올 수 있어요. 기본 맥락을 먼저 채워주세요.",
+      },
+      realWorldTip: "반복 요청이면 목표·대상·제약을 3줄 템플릿으로 만들어 붙여넣으면 품질이 안정된다.",
+    },
+    {
+      id: "prac_b2",
+      difficulty: "beginner",
+      title: "회의 메모를 AI로 요약할 때 필수로 넣어야 하는 것은?",
+      options: ["참석자·결정사항·액션 아이템", "회의실 온도", "간식 메뉴"],
+      correct: 0,
+      desc: "누가 무엇을 결정했는지와 후속 액션을 함께 줘야 한다.",
+      enemyType: "glitch",
+      concept: "결정/책임 추적",
+      whyCorrect:
+        "참석자, 결정, 담당자와 기한을 포함해야 이후 추적이 가능하다. 예를 들어 '백엔드 리더-API 마이그레이션 결정-12/10까지 민수'처럼 연결하면 자동 요약도 바로 쓸 수 있다.",
+      whyWrong: {
+        1: "회의실 온도처럼 분위기 정보는 재밌지만 실행 계획을 세우는 데는 도움이 안 돼요. 핵심 결정 정보가 묻힐 수 있습니다.",
+        2: "간식 메뉴를 적고 싶을 수 있지만 업무 핵심과는 거리가 있어요. 불필요한 정보가 많으면 AI가 중요한 포인트를 놓칠 수 있습니다.",
+      },
+      realWorldTip: "캘린더 초대에 '참석자/의제/결정/액션' 서식을 같이 적어두면 회의 후 바로 AI 요약을 돌릴 수 있다.",
+    },
+    {
+      id: "prac_b3",
+      difficulty: "beginner",
+      title: "AI가 만든 {ASSET}에 사실 오류가 의심될 때 첫 조치는?",
+      options: ["원본 {DATA}와 대조하며 검증", "길이만 줄이기", "폰트만 바꾸기"],
+      correct: 0,
+      desc: "출력을 원본과 비교해 틀린 부분을 바로 잡아야 한다.",
+      enemyType: "glitch",
+      concept: "사실 검증",
+      whyCorrect:
+        "근거 데이터와 줄 단위로 비교하며 틀린 수치·인용을 표시해야 한다. 예를 들어 로그의 에러율이나 캠페인 전환율을 원본과 대조하면 신뢰를 지킬 수 있다.",
+      whyWrong: {
+        1: "길이를 줄이면 정돈돼 보여서 선택하기 쉽지만, 사실 관계가 틀렸다면 오류가 그대로 남아요. 짧아진 오류는 더 눈에 띄지 않을 수 있습니다.",
+        2: "폰트를 바꾸면 산출물이 깔끔해 보이지만, 사실성은 그대로예요. 겉모습보다 내용 검증이 먼저입니다.",
+      },
+      realWorldTip: "원본 링크나 스크린샷을 AI 출력 옆에 붙여두고 리뷰하면 검수 시간을 크게 줄일 수 있다.",
+    },
+    {
+      id: "prac_i1",
+      difficulty: "intermediate",
+      title: "반복되는 {ASSET}을 자동화 템플릿으로 만들 때 가장 먼저 정의할 것은?",
+      options: ["입력·출력 스키마와 품질 기준", "색상/폰트 가이드", "모델 버전만 변경"],
+      correct: 0,
+      desc: "스키마와 합격 기준이 고정돼야 자동화 품질을 비교할 수 있다.",
+      enemyType: "prompt_eater",
+      concept: "스키마 고정",
+      whyCorrect:
+        "필수 입력 필드, 기대 출력 구조, 합격 기준을 미리 정의해야 회귀 테스트가 가능하다. 예를 들어 '입력: 요구사항/로그, 출력: 표준 체크리스트·요약, 기준: 오류 유형 3개 포함'처럼 고정한다.",
+      whyWrong: {
+        1: "디자인 가이드를 먼저 챙기면 완성도가 높을 것 같지만, 구조가 없으면 매번 새로 설명해야 해요. 자동화 효과가 줄어듭니다.",
+        2: "모델을 바꾸면 나아질 것처럼 느껴지지만, 기준이 없으면 개선 여부를 확인하기 어렵습니다. 비교할 공통 틀이 필요해요.",
+      },
+      realWorldTip: "JSON 스키마와 샘플 입력/출력을 한 문서에 두고 PR 템플릿처럼 관리하면 팀 합의가 빨라진다.",
+    },
+    {
+      id: "prac_i2",
+      difficulty: "intermediate",
+      title: "{DOMAIN} 리스크나 이슈 로그를 AI로 정리할 때 놓치기 쉬운 정보는?",
+      options: ["발생 조건·영향도·우선순위", "시각 효과", "폰트 스타일"],
+      correct: 0,
+      desc: "조건과 영향이 있어야 우선순위가 계산된다.",
+      enemyType: "prompt_eater",
+      concept: "리스크 우선순위",
+      whyCorrect:
+        "발생 조건과 고객/시스템 영향, 우선순위를 함께 기록해야 대응 순서를 정할 수 있다. 예를 들어 '로그인 실패 5% 이상이면, 신규 결제 중단 영향, P1'처럼 표준화한다.",
+      whyWrong: {
+        1: "시각 효과를 주면 보기 좋지만, 의사결정에 필요한 정보가 빠지면 우선순위를 정하기 어렵습니다.",
+        2: "폰트 스타일을 다듬으면 깔끔해 보이지만, 리스크 판단에는 조건과 영향 정보가 더 중요해요.",
+      },
+      realWorldTip: "리스크 템플릿에 조건/영향/주요 지표를 필수 필드로 설정하고 AI가 빈칸을 채우게 하면 우선순위 회의가 빨라진다.",
+    },
+    {
+      id: "prac_i3",
+      difficulty: "intermediate",
+      title: "다국어 {ASSET}을 안정적으로 만들기 위한 필수 입력은?",
+      options: ["용어집·톤·길이 지침", "랜덤 이모지", "무료 번역기 링크만 제공"],
+      correct: 0,
+      desc: "용어와 톤을 고정해야 언어별 품질이 균일해진다.",
+      enemyType: "prompt_eater",
+      concept: "용어/톤 가이드",
+      whyCorrect:
+        "공통 용어집, 브랜드 톤, 목표 길이를 명시하면 언어별 표현이 달라지지 않는다. 예를 들어 '용어: 사용자는 회원, 톤: 격식, 길이: 500자'처럼 주면 재검수가 줄어든다.",
+      whyWrong: {
+        1: "이모지는 친근함을 주지만 번역 시 의미가 달라지거나 문화적 오해가 생길 수 있어요. 표현이 흔들릴 수 있습니다.",
+        2: "번역기 링크만 주면 도구 선택이 제각각이어서 용어 일관성을 지키기 어렵습니다. 공통 가이드가 필요해요.",
+      },
+      realWorldTip: "언어별 금지 표현과 허용 표현을 짧게 정리해 프롬프트에 첨부하면 QA 시간이 크게 줄어든다.",
+    },
+    {
+      id: "prac_a1",
+      difficulty: "advanced",
+      title: "RAG로 {ASSET} 답변 품질을 높이려면 초기 설계에서 가장 중요한 것은?",
+      options: ["청크 기준과 메타데이터(출처·권한)", "온도 0으로 고정", "토큰 제한만 늘리기"],
+      correct: 0,
+      desc: "검색 적합도를 좌우하는 청크/메타 설계가 핵심이다.",
+      enemyType: "singularity_eye",
+      concept: "검색 적합도 설계",
+      whyCorrect:
+        "콘텐츠를 의미 단위로 자르고 출처·버전·권한 태그를 붙여야 검색과 필터링이 정확해진다. 예를 들어 매뉴얼을 API별/릴리스별 청크로 나누고 권한 태그를 걸면 잘못된 답변을 막을 수 있다.",
+      whyWrong: {
+        1: "온도를 낮추면 차분해지긴 하지만, 검색이 잘못되면 여전히 틀린 답을 줄 수 있어요. 근거 품질을 먼저 잡는 게 안전합니다.",
+        2: "토큰을 많이 주면 풍부해 보이지만 불필요한 내용도 늘어 핵심이 흐려질 수 있습니다. 선별된 컨텍스트가 더 중요해요.",
+      },
+      realWorldTip: "초기 파일 업로드 시 메타데이터 스키마를 먼저 정의하고, 검색 실패 예시를 수집해 청크 기준을 조정하라.",
+    },
+    {
+      id: "prac_a2",
+      difficulty: "advanced",
+      title: "AI 도입 효과를 경영진에 설득하려면 어떤 근거가 필요할까?",
+      options: ["도입 전후 베이스라인 대비 정량 지표", "새 UI 스크린샷", "팀 분위기 느낌"],
+      correct: 0,
+      desc: "전후 비교 가능한 정량 지표가 있어야 설득된다.",
+      enemyType: "singularity_eye",
+      concept: "정량적 효과 증명",
+      whyCorrect:
+        "시간 단축, 오류율 감소, 전환율 개선 같은 지표를 도입 전후 베이스라인과 비교해야 효과를 증명할 수 있다. 예를 들어 코드 리뷰 평균 2일→0.5일, 캠페인 작성 시간 4시간→1시간처럼 제시한다.",
+      whyWrong: {
+        1: "UI 스크린샷은 눈에 잘 띄지만 성과를 숫자로 증명하지는 못해요. 결정권자가 납득하기 어려울 수 있습니다.",
+        2: "팀 분위기 이야기는 따뜻하지만, 투자 판단에는 객관적 근거가 부족해요. 데이터와 함께 제시하면 더 힘이 실립니다.",
+      },
+      realWorldTip: "도입 전에 기준 지표를 한 번 측정해둔 뒤 주간 리포트로 같은 지표를 추적하면 예산 심의 때 바로 활용할 수 있다.",
+    },
+  ],
+  prompt: [
+    {
+      id: "prompt_b1",
+      difficulty: "beginner",
+      title: "톤이나 길이가 지켜지지 않을 때 가장 먼저 해야 할 조치는?",
+      options: ["시스템 메시지에 톤·길이·형식을 명시", "온도만 낮추기", "샘플 수만 줄이기"],
+      correct: 0,
+      desc: "시스템 레벨에서 형식을 고정해야 흔들리지 않는다.",
+      enemyType: "prompt_eater",
+      concept: "시스템 지시 활용",
+      whyCorrect:
+        "시스템 메시지에 톤, 길이, 금지 표현을 넣으면 사용자 입력보다 우선 적용된다. 예를 들어 '200자 이하, 존댓말, 행동만 bullet'을 시스템에 넣으면 질문이 흔들려도 형식이 유지된다.",
+      whyWrong: {
+        1: "온도를 낮추면 차분해지지만 길이나 형식을 반드시 지키는 장치는 아니에요. 여전히 편차가 날 수 있습니다.",
+        2: "샘플 수를 줄이면 간단해 보이지만, 형식 규칙을 명시하지 않으면 결과가 들쭉날쭉할 수 있어요.",
+      },
+      realWorldTip: "자주 쓰는 형식은 시스템 메시지 템플릿으로 저장해 팀이 복붙할 수 있게 공유하라.",
+    },
+    {
+      id: "prompt_b2",
+      difficulty: "beginner",
+      title: "JSON 형태로 분류 결과를 받으려면 어떤 지시가 필요할까?",
+      options: ["스키마와 예시(JSON)를 함께 제공", "길이만 제한", "모델만 교체"],
+      correct: 0,
+      desc: "출력 스키마를 명시해야 구조가 고정된다.",
+      enemyType: "prompt_eater",
+      concept: "구조화 출력 지시",
+      whyCorrect:
+        "필드 이름, 타입, 허용 값, 예시를 함께 주면 모델이 같은 구조로 답한다. 예를 들어 `{\"tag\": [\"bug\"], \"priority\": \"P1\"}` 같은 예시를 넣으면 파싱 오류가 줄어든다.",
+      whyWrong: {
+        1: "길이만 제한하면 깔끔해 보이지만 구조는 여전히 자유로워 JSON이 깨질 수 있어요. 형태를 명확히 해야 합니다.",
+        2: "모델을 바꾸면 나아질 것 같지만, 스키마를 주지 않으면 어떤 모델도 동일한 구조를 보장하기 어렵습니다.",
+      },
+      realWorldTip: "JSON 스키마를 코드 블록으로 넣고 '다른 문자는 제외'라고 명시하면 운영에서 파싱 실패가 크게 줄어든다.",
+    },
+    {
+      id: "prompt_b3",
+      difficulty: "beginner",
+      title: "AI에게 역할을 부여하는 주된 목적은?",
+      options: ["응답 범위와 톤을 좁혀 편차를 줄이기", "속도 향상", "비용 감소"],
+      correct: 0,
+      desc: "역할 지시는 품질 편차를 줄이는 장치다.",
+      enemyType: "prompt_eater",
+      concept: "역할 기반 프롬프트",
+      whyCorrect:
+        "전문가 역할을 주면 기대하는 관점과 언어가 좁혀져 일관성이 생긴다. 예를 들어 '{ROLE} 선임으로서 보안 위험만 지적'이라고 하면 불필요한 아이디어 제안이 줄어든다.",
+      whyWrong: {
+        1: "역할을 주면 집중할 것 같지만 속도 자체가 빨라지지는 않아요. 응답 품질과 관련된 설정입니다.",
+        2: "역할 지시는 비용을 바로 낮추지 않아요. 토큰을 줄이거나 프로세스를 바꿔야 비용이 변합니다.",
+      },
+      realWorldTip: "역할과 금지사항을 함께 주면 톤과 범위가 동시에 잡혀 리뷰 시간이 단축된다.",
+    },
+    {
+      id: "prompt_i1",
+      difficulty: "intermediate",
+      title: "길이가 긴 {DATA}를 요약할 때 오류를 줄이는 방식은?",
+      options: ["부분 요약 후 메타 요약(계층 요약)", "온도 0으로 고정", "길이 제한만 늘리기"],
+      correct: 0,
+      desc: "계층 요약이 길이 제한을 우회하며 정확도를 높인다.",
+      enemyType: "prompt_eater",
+      concept: "계층 요약 설계",
+      whyCorrect:
+        "본문을 여러 조각으로 나눠 요약한 뒤 그 요약들을 다시 압축하면 맥락을 유지하면서 길이를 맞출 수 있다. 예를 들어 티켓 50개를 5개씩 요약하고 다시 합치면 누락을 줄일 수 있다.",
+      whyWrong: {
+        1: "온도를 낮추면 차분해지지만 긴 입력을 다 담지는 못해요. 길이 문제는 여전히 남습니다.",
+        2: "길이 제한을 늘리면 편해 보이지만 한계에 부딪히거나 비용이 커질 수 있어요. 구조적으로 요약하는 편이 안전합니다.",
+      },
+      realWorldTip: "대량 문서를 다룰 때는 'chunk 요약 -> 합치기 -> 검증' 스텝을 템플릿으로 만들어둬라.",
+    },
+    {
+      id: "prompt_i2",
+      difficulty: "intermediate",
+      title: "할루시네이션을 줄이기 위한 프롬프트 설계는?",
+      options: ["근거 없으면 모른다고 답하고, 인용 근거를 표기하라고 지시", "온도 높이기", "질문을 여러 번 반복하기"],
+      correct: 0,
+      desc: "불확실성 표현과 근거 인용을 강제해야 한다.",
+      enemyType: "prompt_eater",
+      concept: "근거 기반 답변",
+      whyCorrect:
+        "모른다는 응답을 허용하고 근거 출처를 요구하면 추측을 줄일 수 있다. 예를 들어 '출처 URL 2개 이상 인용, 없으면 모르겠다고 답'을 넣으면 허위 링크를 덜 만든다.",
+      whyWrong: {
+        1: "온도를 높이면 창의적이긴 하지만 추측도 함께 늘 수 있어요. 안정성에는 맞지 않습니다.",
+        2: "질문을 반복하면 설득력은 생기지만 근거가 없으면 같은 오류가 계속될 수 있어요. 근거 요구가 더 효과적입니다.",
+      },
+      realWorldTip: "실서비스에서는 '근거 없는 답변 거절' 규칙을 시스템 메시지로 고정하고 로깅까지 연결해야 한다.",
+    },
+    {
+      id: "prompt_i3",
+      difficulty: "intermediate",
+      title: "다단계 추론 문제가 자주 틀릴 때 넣어야 할 지시는?",
+      options: ["중간 추론 단계를 표/리스트로 적게 하고 자기 검증을 지시", "최종 답만 요청", "샘플 수만 늘리기"],
+      correct: 0,
+      desc: "중간 사고 과정을 외부화해야 오류를 잡을 수 있다.",
+      enemyType: "prompt_eater",
+      concept: "체인 오브 소트",
+      whyCorrect:
+        "중간 계산이나 가정, 근거를 표로 적게 하고 '오류가 있으면 수정' 지시를 넣으면 논리 비약을 잡을 수 있다. 예를 들어 정책 비교 시 항목별 체크리스트를 채우게 하면 빠뜨림이 줄어든다.",
+      whyWrong: {
+        1: "최종 답만 받으면 간단하지만, 과정이 보이지 않아 개선 포인트를 찾기 어려워요.",
+        2: "샘플을 늘리면 맞을 확률은 오르지만 비용이 커지고 원인 분석이 어렵습니다. 과정 노출이 더 효율적이에요.",
+      },
+      realWorldTip: "중간 표를 로그로 저장해 오답 패턴을 분석하면 프롬프트 개선 포인트가 명확해진다.",
+    },
+    {
+      id: "prompt_a1",
+      difficulty: "advanced",
+      title: "안전 프롬프트를 설계할 때 반드시 포함해야 할 것은?",
+      options: ["금지 주제·표현과 거부 응답 패턴", "온도 0", "예시 1개만 추가"],
+      correct: 0,
+      desc: "금지 항목과 거부 규칙이 있어야 정책을 지킨다.",
+      enemyType: "security_bot",
+      concept: "안전 가드레일",
+      whyCorrect:
+        "금지 키워드, 허용 범위, 위반 시 답변 예시를 명시하면 모델이 민감 주제를 거부할 수 있다. 예를 들어 '개인정보 요청 시 답변 거부 문구'를 넣으면 유출을 막는다.",
+      whyWrong: {
+        1: "온도를 낮추면 조심스러워지지만, 금지 주제를 꼭 피하는 장치는 아니에요. 정책은 별도로 명확히 해야 합니다.",
+        2: "예시가 1개뿐이면 다양한 우회 패턴을 막기 어렵습니다. 몇 가지 대표 사례를 더 넣으면 안전해져요.",
+      },
+      realWorldTip: "정책 문구는 시스템 프롬프트에 고정하고, 감사 로그에 거부 사유도 함께 남겨야 규제 대응이 쉽다.",
+    },
+    {
+      id: "prompt_a2",
+      difficulty: "advanced",
+      title: "프롬프트 실험을 코드로 관리할 때 필요한 것은?",
+      options: ["버전·테스트 케이스·시드 기록", "주석 제거", "무작위 입력"],
+      correct: 0,
+      desc: "버전과 테스트를 기록해야 회귀 비교가 가능하다.",
+      enemyType: "singularity_eye",
+      concept: "프롬프트 버전 관리",
+      whyCorrect:
+        "프롬프트 문자열과 실험 시드, 기대 출력 테스트를 함께 저장해야 변경 효과를 비교할 수 있다. 예를 들어 git에 프롬프트와 회귀 테스트를 묶어두면 릴리스 전 품질 검증이 가능하다.",
+      whyWrong: {
+        1: "주석을 지우면 단정해 보이지만 변경 이유를 잃어버려 다시 개선하기 어려워요.",
+        2: "무작위 입력만 쓰면 매번 결과가 달라 비교가 힘듭니다. 같은 시드를 써야 개선 효과를 확인할 수 있어요.",
+      },
+      realWorldTip: "AB 테스트용 프롬프트와 결과 샘플을 폴더 구조로 고정해두면 새 모델 교체 시 바로 비교할 수 있다.",
+    },
+  ],
+  tools: [
+    {
+      id: "tools_b1",
+      difficulty: "beginner",
+      title: "실시간 정보가 필요한 질문에 적합한 모델/도구는?",
+      options: ["브라우징·검색 가능한 모델", "텍스트 전용 오프라인 모델", "이미지 전용 모델"],
+      correct: 0,
+      desc: "실시간 정보는 브라우징 모델로 최신성을 확보한다.",
+      enemyType: "legacy_tool",
+      concept: "실시간 검색 활용",
+      whyCorrect:
+        "뉴스나 가격처럼 변하는 정보는 검색/브라우징 기능이 있는 모델로 확인해야 한다. 예를 들어 고객 가용 재고를 답할 때 브라우징 모델을 쓰면 최신 데이터를 불러올 수 있다.",
+      whyWrong: {
+        1: "오프라인 모델은 빠르지만 최신 정보가 없을 수 있어요. 업데이트 주기를 모르면 답이 낡을 위험이 있습니다.",
+        2: "이미지 모델은 시각 처리에 강점이 있어 텍스트 기반 최신 정보를 답하기에는 적합하지 않습니다.",
+      },
+      realWorldTip: "정적 질의와 실시간 질의를 라우팅해 비용을 아끼고 정확도를 높여라.",
+    },
+    {
+      id: "tools_b2",
+      difficulty: "beginner",
+      title: "{ASSET} 협업 문서를 만들 때 기본 권한 설정은?",
+      options: ["최소 권한 원칙으로 편집자를 제한", "모두 편집 가능하게 공개", "테마만 먼저 설정"],
+      correct: 0,
+      desc: "최소 권한 원칙을 적용해야 유출과 오염을 막는다.",
+      enemyType: "legacy_tool",
+      concept: "권한 최소화",
+      whyCorrect:
+        "역할별로 보기/편집을 분리해야 실수나 유출을 줄인다. 예를 들어 제안서 초안은 담당자만 편집, 나머지는 댓글만 허용하면 이력이 깔끔하다.",
+      whyWrong: {
+        1: "모두 편집을 열어두면 빠를 것 같지만 우발적 수정이나 유출 위험이 커질 수 있어요.",
+        2: "테마를 맞추면 보기 좋지만 접근 통제와는 별개예요. 권한이 먼저 정리돼야 합니다.",
+      },
+      realWorldTip: "민감 문서는 만료 기간과 링크 보호를 함께 설정해 두면 배포 후에도 통제가 쉽다.",
+    },
+    {
+      id: "tools_b3",
+      difficulty: "beginner",
+      title: "스프레드시트를 AI로 분석하기 전에 해야 할 일은?",
+      options: ["헤더와 데이터 타입을 정리", "배경색을 꾸미기", "행 높이 늘리기"],
+      correct: 0,
+      desc: "정리된 스키마가 있어야 분석 오류가 줄어든다.",
+      enemyType: "legacy_tool",
+      concept: "데이터 정규화",
+      whyCorrect:
+        "열 이름과 타입을 명확히 해야 모델이 의미를 이해한다. 예를 들어 날짜 열을 텍스트로 두면 기간 계산이 틀리므로 사전에 ISO 날짜로 변환한다.",
+      whyWrong: {
+        1: "배경색을 바꾸면 가독성은 좋아지지만 데이터 의미를 바로잡지는 못해요.",
+        2: "행 높이를 조정하면 보기 편해지지만 값 자체의 정확성과는 무관합니다.",
+      },
+      realWorldTip: "업로드 전에 null, 단위, 중복을 간단히 정리한 후 AI 분석을 돌리면 오탐을 크게 줄일 수 있다.",
+    },
+    {
+      id: "tools_i1",
+      difficulty: "intermediate",
+      title: "외부 API 호출이 실패해도 워크플로가 버티게 하려면?",
+      options: ["백오프 재시도와 회로 차단 패턴 적용", "무한 재호출", "에러를 무시하고 진행"],
+      correct: 0,
+      desc: "재시도와 차단으로 장애 전파를 막는다.",
+      enemyType: "legacy_tool",
+      concept: "회복 탄력성 설계",
+      whyCorrect:
+        "지수 백오프와 회로 차단을 넣으면 일시 장애 시 자동 복구하고, 연쇄 장애를 막을 수 있다. 예를 들어 429 응답 시 1s/2s/4s 대기 후 차단하면 서비스가 안정된다.",
+      whyWrong: {
+        1: "무한 재호출은 곧 복구될 것 같지만 비용이 커지고 상대 시스템에 부담을 줄 수 있어요.",
+        2: "에러를 무시하면 겉으론 진행되지만 잘못된 결과가 쌓여 신뢰를 잃을 수 있습니다.",
+      },
+      realWorldTip: "외부 의존점은 별도 모듈로 분리하고 재시도 횟수·타임아웃을 환경변수로 관리하면 운영 중에도 튜닝하기 쉽다.",
+    },
+    {
+      id: "tools_i2",
+      difficulty: "intermediate",
+      title: "로그를 수집·공유할 때 민감 정보 노출을 막는 방법은?",
+      options: ["마스킹/삭제 파이프라인을 적용", "용량만 늘리기", "압축만 하기"],
+      correct: 0,
+      desc: "수집 시점에 민감 필드를 걸러야 한다.",
+      enemyType: "security_bot",
+      concept: "로그 프라이버시",
+      whyCorrect:
+        "수집 단계에서 이메일·전화·주민번호 등을 자동 마스킹해야 유출을 막을 수 있다. 예를 들어 정규식 파이프라인으로 카드번호를 `****` 처리한 뒤 저장한다.",
+      whyWrong: {
+        1: "용량을 늘리면 많이 담을 수 있지만, 민감 정보가 그대로라면 리스크는 줄지 않습니다.",
+        2: "압축은 공간을 아껴주지만 노출된 정보 자체를 없애지는 못해요. 필터링이 우선입니다.",
+      },
+      realWorldTip: "로그 스키마에 '민감 필드' 태그를 달아 추적하고, 저장 기간을 정책으로 제한하면 대응이 쉬워진다.",
+    },
+    {
+      id: "tools_i3",
+      difficulty: "intermediate",
+      title: "팀별 AI 사용량과 비용을 통제하려면 무엇이 필요한가?",
+      options: ["쿼터·모니터링 대시보드·알림", "무제한 허용", "과금 알림 끄기"],
+      correct: 0,
+      desc: "사용량을 가시화하고 한도를 정해야 남용을 막는다.",
+      enemyType: "legacy_tool",
+      concept: "사용량 거버넌스",
+      whyCorrect:
+        "팀/프로젝트 단위 쿼터와 실시간 모니터링을 두면 예산을 예측하고 남용을 막을 수 있다. 예를 들어 월 10만 토큰 초과 시 슬랙 알림을 보내면 조기 대응이 가능하다.",
+      whyWrong: {
+        1: "무제한 허용은 편하지만 예산 초과나 오남용을 놓치기 쉽습니다. 통제가 어려워져요.",
+        2: "알림을 끄면 조기 신호를 놓쳐 뒤늦게 대응하게 될 수 있습니다.",
+      },
+      realWorldTip: "대시보드에 단가와 예산 대비 사용률을 함께 표시하면 경영진 보고 자료로도 바로 쓸 수 있다.",
+    },
+    {
+      id: "tools_a1",
+      difficulty: "advanced",
+      title: "검색+생성 파이프라인을 모니터링할 때 핵심 지표는?",
+      options: ["성공률·지연·매칭률", "GPU 사용량만", "토큰 길이만"],
+      correct: 0,
+      desc: "품질과 속도를 함께 봐야 이상을 잡는다.",
+      enemyType: "singularity_eye",
+      concept: "엔드투엔드 관측성",
+      whyCorrect:
+        "응답 성공률, 지연, 검색 매칭률을 함께 봐야 어디서 문제가 생겼는지 빠르게 찾을 수 있다. 예를 들어 매칭률이 떨어지면 인덱스 문제를, 지연이 늘면 모델/네트워크를 의심한다.",
+      whyWrong: {
+        1: "GPU 사용량은 인프라 상태만 보여줘서 품질 이슈를 파악하기 어렵습니다. 전체 흐름을 함께 봐야 해요.",
+        2: "토큰 길이는 비용 감지에는 좋지만 실패나 지연 원인과 직접 연결되지 않습니다.",
+      },
+      realWorldTip: "로그에 쿼리-ID별 검색 결과와 생성 결과를 함께 남기고 대시보드로 묶으면 RCA가 빨라진다.",
+    },
+    {
+      id: "tools_a2",
+      difficulty: "advanced",
+      title: "온프레 모델을 선택해야 하는 대표 이유는?",
+      options: ["데이터 통제/보안 요구가 높을 때", "배경음 설정을 바꾸고 싶을 때", "폰트 변경 필요"],
+      correct: 0,
+      desc: "보안과 규제 요구가 높으면 온프레가 필요하다.",
+      enemyType: "security_bot",
+      concept: "배포 아키텍처 판단",
+      whyCorrect:
+        "민감 데이터나 규제 산업에서는 데이터 경로를 직접 통제해야 하므로 온프레 또는 VPC 배포가 적합하다. 예를 들어 의료 기록을 처리할 때는 내부망 모델이 요구된다.",
+      whyWrong: {
+        1: "배경음은 사용자 경험 요소라 보안·통제 요건을 결정하는 기준이 되기 어렵습니다.",
+        2: "폰트 변경도 비주얼 요소라 배포 방식 선택과 직접 관련이 없어요. 보안 요구가 우선입니다.",
+      },
+      realWorldTip: "온프레를 선택했다면 키 관리, 접근 제어, 로깅까지 포함한 운영 계획을 동시에 세워야 한다.",
+    },
+  ],
+  ethics: [
+    {
+      id: "ethics_b1",
+      difficulty: "beginner",
+      title: "개인정보가 포함된 자료를 AI에 넣기 전 해야 할 일은?",
+      options: ["비식별화·최소화", "그대로 업로드", "지인에게 전달"],
+      correct: 0,
+      desc: "민감 정보는 최소한으로 가리고 넣어야 한다.",
+      enemyType: "security_bot",
+      concept: "개인정보 보호",
+      whyCorrect:
+        "이름, 연락처, 계좌 등은 가명처리하거나 제거해야 유출 위험을 줄일 수 있다. 예를 들어 티켓 로그에 고객 이메일을 `***@domain.com`으로 바꾸고 업로드한다.",
+      whyWrong: {
+        1: "원본을 그대로 올리면 편하지만 규제 위반과 유출 위험이 커요. 한 번 새면 돌이키기 어렵습니다.",
+        2: "지인에게 공유하면 도움을 받을 것 같지만 노출 범위가 넓어지고 책임이 모호해질 수 있습니다.",
+      },
+      realWorldTip: "민감 필드를 자동 탐지·마스킹하는 전처리 스크립트를 만들어 워크플로에 넣어라.",
+    },
+    {
+      id: "ethics_b2",
+      difficulty: "beginner",
+      title: "AI 생성물을 외부에 배포할 때 필요한 안내는?",
+      options: ["AI 생성 여부와 검증 필요성을 명시", "모델 이름만 표기", "아무 안내 없음"],
+      correct: 0,
+      desc: "출처와 검증 필요성을 알려야 책임 있는 배포다.",
+      enemyType: "security_bot",
+      concept: "출처 투명성",
+      whyCorrect:
+        "AI가 작성했다는 점과 사람이 검수했는지 여부를 알려야 오해를 줄일 수 있다. 예를 들어 'AI 초안 기반, 2024-12-01 검수 완료'라고 표시한다.",
+      whyWrong: {
+        1: "모델 이름만 적으면 정보는 있지만 검증 여부를 알 수 없어요. 책임 범위가 흐려집니다.",
+        2: "안내 없이 배포하면 사용자가 완전한 사실로 믿을 수 있어요. 오해를 막으려면 출처를 알려주세요.",
+      },
+      realWorldTip: "템플릿 하단에 'AI 생성 초안, 사실 검증 필요 시 연락' 같은 고지를 기본값으로 넣어라.",
+    },
+    {
+      id: "ethics_b3",
+      difficulty: "beginner",
+      title: "AI 결과를 검수 없이 고객에게 바로 전달할 때 가장 큰 위험은?",
+      options: ["사실 오류·편향 노출", "배경색 깨짐", "폰트 깨짐"],
+      correct: 0,
+      desc: "검수 없이는 오류와 편향이 그대로 전달된다.",
+      enemyType: "security_bot",
+      concept: "검수 필요성",
+      whyCorrect:
+        "모델이 생성한 잘못된 수치나 편향 표현이 그대로 나가면 신뢰와 법적 리스크를 모두 잃는다. 예를 들어 잘못된 견적을 보내면 계약 분쟁이 발생할 수 있다.",
+      whyWrong: {
+        1: "배경색 깨짐은 거슬릴 수 있지만 핵심 리스크는 아니에요. 내용 검증이 우선입니다.",
+        2: "폰트 깨짐도 가독성 문제라 비즈니스 영향은 적어요. 사실성과 편향을 먼저 봐야 합니다.",
+      },
+      realWorldTip: "고객용 응답은 최소 1단계 사람 검수를 거치고, 승인 흔적을 남겨 책임소재를 명확히 하라.",
+    },
+    {
+      id: "ethics_i1",
+      difficulty: "intermediate",
+      title: "고위험 업무에서 휴먼 인더 루프가 필요한 이유는?",
+      options: ["오류·편향을 사람이 최종 제어", "비용 증가", "속도 저하"],
+      correct: 0,
+      desc: "사람 검수가 고위험 도메인에서 안전망 역할을 한다.",
+      enemyType: "security_bot",
+      concept: "휴먼 인더 루프",
+      whyCorrect:
+        "법률, 의료, 금융처럼 오류 비용이 큰 영역은 사람이 최종 검토해야 한다. 예를 들어 약관 변경 안내는 법무가 승인해야 규제 위반을 막을 수 있다.",
+      whyWrong: {
+        1: "비용이 늘어 보여 망설여질 수 있지만, 사고 비용을 생각하면 필요한 투자예요.",
+        2: "속도가 느려질까 걱정되지만, 고위험 영역은 안전이 더 우선입니다. 사람 검토로 큰 사고를 막을 수 있어요.",
+      },
+      realWorldTip: "위험도에 따라 자동/검토/거부 세 가지 경로를 정의하고, 검토 과정과 승인자를 로깅하라.",
+    },
+    {
+      id: "ethics_i2",
+      difficulty: "intermediate",
+      title: "저작권 리스크를 줄이기 위한 프로세스는?",
+      options: ["금지 키워드 정책과 출처 필터링 적용", "즉시 외부 공개", "모델만 교체"],
+      correct: 0,
+      desc: "정책과 필터로 금지 요소를 걸러야 한다.",
+      enemyType: "security_bot",
+      concept: "저작권 통제",
+      whyCorrect:
+        "금지된 캐릭터·브랜드를 차단하고, 인용 시 출처를 요구해야 저작권 분쟁을 줄인다. 예를 들어 이미지 생성 프롬프트에 금지어 리스트를 두고 필터링한다.",
+      whyWrong: {
+        1: "검토 없이 공개하면 빠르지만 보호된 콘텐츠가 섞일 위험이 있어요. 사후 대응이 더 어려워집니다.",
+        2: "모델을 바꿔도 정책이 없으면 같은 문제가 반복될 수 있어요. 절차가 안전망을 만듭니다.",
+      },
+      realWorldTip: "출시 전 AI 산출물에 대해 자동 금지어 스캔과 사람이 한 번 보는 게이트를 만들라.",
+    },
+    {
+      id: "ethics_i3",
+      difficulty: "intermediate",
+      title: "로그에 민감 정보가 남지 않게 하려면?",
+      options: ["수집/저장 단계에서 마스킹하고 보존 기간을 설정", "무제한 저장", "압축만 하기"],
+      correct: 0,
+      desc: "수집 시점 마스킹과 보존 정책이 핵심이다.",
+      enemyType: "security_bot",
+      concept: "로그 거버넌스",
+      whyCorrect:
+        "수집 단계에서 마스킹하고, 30/90일 등 보존 기간을 지정해야 규제에 대응할 수 있다. 예를 들어 PII 필드는 저장 전에 hash나 삭제 처리한다.",
+      whyWrong: {
+        1: "무제한 저장은 편하지만 오래될수록 유출·규제 리스크가 커집니다. 만료 정책이 필요해요.",
+        2: "압축은 공간만 절약할 뿐, 민감 데이터는 그대로 남아 위험을 줄이지 못합니다.",
+      },
+      realWorldTip: "로그 파이프라인에 PII 탐지기를 두고, 만료 시 자동 삭제하는 작업을 크론으로 돌려라.",
+    },
+    {
+      id: "ethics_a1",
+      difficulty: "advanced",
+      title: "설명 가능성을 높이기 위한 설계는?",
+      options: ["근거와 추론 경로를 함께 노출", "속도만 높이기", "UI를 화려하게 개편"],
+      correct: 0,
+      desc: "근거를 노출해야 설명 가능성이 확보된다.",
+      enemyType: "singularity_eye",
+      concept: "설명 가능성",
+      whyCorrect:
+        "출처 문서, 사용한 데이터 포인트, 추론 단계를 보여주면 검증과 감사가 가능하다. 예를 들어 답변 옆에 인용 문서를 링크하면 고객이 직접 확인할 수 있다.",
+      whyWrong: {
+        1: "속도를 높이면 편하지만 근거가 없으면 왜 그 답이 나왔는지 설명하기 어려워요.",
+        2: "UI를 멋지게 꾸며도 근거가 없다면 투명성이 올라가지 않습니다. 내용이 먼저입니다.",
+      },
+      realWorldTip: "답변 객체에 출처 배열을 포함하도록 스키마를 정의하면 다양한 인터페이스에서도 근거 노출을 유지할 수 있다.",
+    },
+    {
+      id: "ethics_a2",
+      difficulty: "advanced",
+      title: "규제 산업에서 AI를 쓸 때 추가로 필요한 통제는?",
+      options: ["감사 로그·접근 통제·모델 한계 공개", "무제한 접근 허용", "모델 이름 비공개"],
+      correct: 0,
+      desc: "감사와 통제가 있어야 규제 요구를 충족한다.",
+      enemyType: "security_bot",
+      concept: "규제 대응 거버넌스",
+      whyCorrect:
+        "누가 언제 무엇을 조회/생성했는지 기록하고, 접근 권한을 최소화하며, 모델 한계를 공개해야 규제 감사에 대응할 수 있다. 예를 들어 금융 챗봇은 로그와 알림을 모두 남겨야 한다.",
+      whyWrong: {
+        1: "무제한 접근은 편하지만 민감 정보가 과도하게 퍼질 수 있어요. 최소 권한이 안전합니다.",
+        2: "모델 이름을 숨기면 조용해 보이지만 한계를 알리지 않으면 오해가 생길 수 있어요. 투명하게 안내하는 편이 안전합니다.",
+      },
+      realWorldTip: "규제 대상 기능에는 별도 감사 테이블과 접근 알림을 붙여 추후 조사 시 증빙을 확보하라.",
+    },
+  ],
+  advanced: [
+    {
+      id: "adv_b1",
+      difficulty: "beginner",
+      title: "캐싱을 설계할 때 기본적으로 포함해야 할 키는?",
+      options: ["입력 내용과 사용자 권한 정보", "프롬프트 문자열만", "캐시를 아예 쓰지 않기"],
+      correct: 0,
+      desc: "입력과 권한이 달라지면 다른 답을 반환해야 한다.",
+      enemyType: "singularity_eye",
+      concept: "캐시 키 설계",
+      whyCorrect:
+        "사용자 권한이나 조직 정보가 다르면 같은 질문도 다른 답이어야 하므로 키에 포함해야 한다. 예를 들어 조직 ID를 키에 넣으면 권한 외 문서를 캐시에서 잘못 제공하지 않는다.",
+      whyWrong: {
+        1: "프롬프트만 키로 쓰면 편하지만 권한 차이를 구분하지 못해 잘못된 정보가 노출될 수 있어요.",
+        2: "캐시를 아예 안 쓰면 단순하지만 비용과 지연이 커져 서비스 품질이 흔들릴 수 있습니다.",
+      },
+      realWorldTip: "키를 해시(입력+사용자ID+권한) 형태로 표준화하고 TTL을 업무 중요도에 따라 다르게 두어라.",
+    },
+    {
+      id: "adv_b2",
+      difficulty: "beginner",
+      title: "평가 세트를 만들 때 가장 신뢰도 높은 소스는?",
+      options: ["실사용 쿼리 기반 시나리오", "모델이 만든 질문", "임의 문장 모음"],
+      correct: 0,
+      desc: "실사용 기반 평가가 실제 성능을 보여준다.",
+      enemyType: "singularity_eye",
+      concept: "현실성 있는 평가",
+      whyCorrect:
+        "운영 중 발생한 질문/티켓을 기반으로 시나리오를 만들어야 점수가 실제 사용자 경험과 연결된다. 예를 들어 지난 분기 고객 질문 100개를 클린한 뒤 평가 세트로 쓴다.",
+      whyWrong: {
+        1: "모델이 만든 질문은 깔끔해 보여도 실제 현장과 다를 수 있어요. 성능이 과대평가될 수 있습니다.",
+        2: "임의 문장은 만들기 쉽지만 실제 난이도나 패턴을 반영하지 못해요. 현실성을 잃을 수 있습니다.",
+      },
+      realWorldTip: "운영 로그에서 자주 틀린 케이스를 태깅해 벤치마크로 만들면 개선 효과를 숫자로 증명하기 쉽다.",
+    },
+    {
+      id: "adv_b3",
+      difficulty: "beginner",
+      title: "멀티샷 프롬프트 비용을 줄이는 방법은?",
+      options: ["예시를 검색 후 주입하는 Retrieval-Augmented Prompting", "예시를 무한히 추가해 운에 맡기기", "모델을 무조건 다운그레이드"],
+      correct: 0,
+      desc: "필요할 때만 예시를 불러와 비용을 줄인다.",
+      enemyType: "singularity_eye",
+      concept: "예시 검색 주입",
+      whyCorrect:
+        "필요한 예시만 검색해 넣으면 토큰을 줄이면서도 품질을 유지한다. 예를 들어 비슷한 과거 티켓 3개만 불러와 답변을 생성하면 비용과 편차를 동시에 줄인다.",
+      whyWrong: {
+        1: "예시를 많이 넣으면 든든해 보이지만 비용이 늘고 컨텍스트가 넘칠 수 있어요.",
+        2: "모델을 낮추면 비용은 줄지만 품질 저하를 막기 어렵습니다. 다른 보완책이 필요해요.",
+      },
+      realWorldTip: "과거 사례를 벡터 DB에 넣고, 질의와 유사한 예시 2~3개만 주입하도록 파이프라인을 설계하라.",
+    },
+    {
+      id: "adv_i1",
+      difficulty: "intermediate",
+      title: "에이전트 워크플로가 무한 루프에 빠질 때 필요한 안전장치는?",
+      options: ["스텝 제한·종료 조건·예산 한도", "온도 조정", "모델 교체"],
+      correct: 0,
+      desc: "루프 방지 조건을 명시해야 비용 폭주를 막는다.",
+      enemyType: "singularity_eye",
+      concept: "에이전트 가드레일",
+      whyCorrect:
+        "최대 스텝 수, 실패 횟수, 비용 한도를 정하면 비정상 루프를 끊을 수 있다. 예를 들어 8스텝 초과 시 중단하고 에러를 반환하도록 한다.",
+      whyWrong: {
+        1: "온도를 조정하면 성향은 바뀌지만 루프를 막는 안전장치는 아니에요. 종료 조건이 별도로 필요합니다.",
+        2: "모델을 바꾸면 새로워 보이지만 같은 설계라면 똑같이 루프에 빠질 수 있어요.",
+      },
+      realWorldTip: "각 스텝 로그와 사용 토큰을 기록해 경보를 걸면 현장에서 루프를 빠르게 탐지할 수 있다.",
+    },
+    {
+      id: "adv_i2",
+      difficulty: "intermediate",
+      title: "지식이 오래된 모델을 보완하는 실용적 방법은?",
+      options: ["검색 후 최신 정보를 주입해 답변", "온도 조정", "폰트 변경"],
+      correct: 0,
+      desc: "검색과 주입으로 최신성을 확보한다.",
+      enemyType: "singularity_eye",
+      concept: "지식 보강",
+      whyCorrect:
+        "검색 결과나 최신 문서를 함께 넣으면 오래된 모델도 최신 상황을 반영할 수 있다. 예를 들어 신규 가격표를 검색해 함께 전달하면 잘못된 가격 안내를 막는다.",
+      whyWrong: {
+        1: "온도 조정은 스타일을 바꾸지만 지식 자체를 새로 넣어주지는 않아요.",
+        2: "폰트를 바꾸면 보기만 달라지고 정보는 그대로라 최신성 문제를 해결하지 못합니다.",
+      },
+      realWorldTip: "업데이트가 잦은 데이터는 주기적으로 검색/주입하는 미들웨어를 두고, 실패 시 경고를 보내라.",
+    },
+    {
+      id: "adv_i3",
+      difficulty: "intermediate",
+      title: "프롬프트가 길어질 때 주요 위험은?",
+      options: ["비용 상승과 앞부분 컨텍스트 소실", "색상 문제", "폰트 문제"],
+      correct: 0,
+      desc: "긴 프롬프트는 비용과 성능을 동시에 악화시킬 수 있다.",
+      enemyType: "singularity_eye",
+      concept: "컨텍스트 관리",
+      whyCorrect:
+        "길이가 길면 토큰 비용이 늘고, 컨텍스트 윈도우 한계로 앞부분이 잘릴 수 있다. 예를 들어 200k 토큰 모델도 긴 히스토리에서 초기 규칙이 무시될 수 있다.",
+      whyWrong: {
+        1: "색상은 UI 요소라 컨텍스트 관리와는 관련이 없어요. 길이와 비용을 먼저 챙겨야 합니다.",
+        2: "폰트도 가독성 요소라 컨텍스트 유지 문제를 해결하지 못합니다.",
+      },
+      realWorldTip: "지침은 짧게, 예시는 검색 주입으로 필요한 만큼만 넣어 컨텍스트를 관리하라.",
+    },
+    {
+      id: "adv_a1",
+      difficulty: "advanced",
+      title: "프롬프트 인젝션을 막기 위한 핵심 조치는?",
+      options: ["시스템 프롬프트 고정과 입력 검증/필터링", "색상 변경", "폰트 변경"],
+      correct: 0,
+      desc: "시스템 지시 고정과 입력 필터가 있어야 인젝션을 막는다.",
+      enemyType: "security_bot",
+      concept: "프롬프트 보안",
+      whyCorrect:
+        "시스템 지시를 코드에서 고정하고, 사용자 입력에서 위험 패턴을 필터링해야 우회 지시를 차단할 수 있다. 예를 들어 '이전 지시 무시' 같은 문구를 탐지해 거부한다.",
+      whyWrong: {
+        1: "색상 변경은 시각 요소라 보안에 직접 영향을 주지 않아요.",
+        2: "폰트 변경도 표현만 바꾸어 보안 효과는 없습니다.",
+      },
+      realWorldTip: "입력 필터, 컨텍스트 분리, 정적 시스템 프롬프트를 함께 적용하고, 탐지 로그를 남겨 패턴을 업데이트하라.",
+    },
+    {
+      id: "adv_a2",
+      difficulty: "advanced",
+      title: "LLM 서빙 SLA를 지키기 위한 기술적 조합은?",
+      options: ["오토스케일·캐시·폴백 전략", "테마 변경", "폰트 변경"],
+      correct: 0,
+      desc: "스케일링과 캐시, 폴백이 있어야 지연/장애를 관리한다.",
+      enemyType: "singularity_eye",
+      concept: "신뢰성 엔지니어링",
+      whyCorrect:
+        "부하에 따라 자동 확장하고, 자주 쓰는 응답을 캐시하며, 실패 시 더 작은 모델이나 템플릿 응답으로 폴백해야 한다. 예를 들어 API 장애 시 FAQ 캐시로 응답하면 SLA를 지킨다.",
+      whyWrong: {
+        1: "테마를 바꾸면 보기 좋지만 성능이나 가용성을 직접 개선하지는 않아요.",
+        2: "폰트 변경은 가독성은 돕지만 SLA를 지키는 데는 영향이 적습니다. 인프라 조치가 더 효과적입니다.",
+      },
+      realWorldTip: "임계 지연과 에러율에 대한 경보를 설정하고, 폴백 플로우를 주기적으로 DR 리허설처럼 테스트하라.",
+    },
+  ],
 };
 
-// 경험치 매핑
-const EXP_MAPPING = {
-  beginner: 10,
-  intermediate: 15,
-  advanced: 25
-};
+function fillPlaceholders(text, meta) {
+  if (!text) return "";
+  return text
+    .replace(/{ROLE}/g, meta.label)
+    .replace(/{DOMAIN}/g, meta.domain)
+    .replace(/{ASSET}/g, meta.asset)
+    .replace(/{DATA}/g, meta.data || meta.domain);
+}
 
-// 모든 질문을 하나의 배열로 변환하는 헬퍼 함수
-function getAllQuestions() {
-  const allQuestions = [];
+function softenWhyWrong(text) {
+  if (!text) return "";
+  return `이 선택을 하신 이유가 충분히 이해돼요. ${text} 다음에는 핵심만 챙기면 금방 더 좋아질 거예요.`;
+}
 
-  for (const [categoryKey, categoryData] of Object.entries(EXTENDED_QUESTIONS)) {
-    for (const [difficulty, questions] of Object.entries(categoryData)) {
-      questions.forEach(q => {
-        allQuestions.push({
-          ...q,
-          category: categoryKey,
-          difficulty: difficulty
-        });
+function buildRoleQuestions(roleKey, meta) {
+  const roleSet = {};
+  Object.entries(BASE_TEMPLATES).forEach(([cat, list]) => {
+    roleSet[cat] = { beginner: [], intermediate: [], advanced: [] };
+    list.forEach((tpl) => {
+      const item = {
+        id: `${roleKey}_${tpl.id}`,
+        category: cat,
+        title: fillPlaceholders(tpl.title, meta),
+        options: tpl.options.map((o) => fillPlaceholders(o, meta)),
+        correct: tpl.correct,
+        desc: fillPlaceholders(tpl.desc, meta),
+        enemyType: tpl.enemyType,
+        exp: EXP_BY_LEVEL[tpl.difficulty],
+        difficulty: tpl.difficulty,
+        concept: fillPlaceholders(tpl.concept, meta),
+        whyCorrect: fillPlaceholders(tpl.whyCorrect, meta),
+        whyWrong: {
+          1: softenWhyWrong(fillPlaceholders(tpl.whyWrong[1], meta)),
+          2: softenWhyWrong(fillPlaceholders(tpl.whyWrong[2], meta)),
+        },
+        realWorldTip: fillPlaceholders(tpl.realWorldTip, meta),
+      };
+      if (roleSet[cat][tpl.difficulty].length < (CATEGORY_LIMIT[tpl.difficulty] || 0)) {
+        roleSet[cat][tpl.difficulty].push(item);
+      }
+    });
+  });
+  return roleSet;
+}
+
+const EXTENDED_QUESTIONS = Object.fromEntries(
+  Object.entries(ROLE_META).map(([roleKey, meta]) => [roleKey, buildRoleQuestions(roleKey, meta)])
+);
+
+function getQuestionStats() {
+  const stats = {
+    total: 0,
+    byRole: {},
+    byCategory: {},
+    byDifficulty: { beginner: 0, intermediate: 0, advanced: 0 },
+  };
+
+  Object.entries(EXTENDED_QUESTIONS).forEach(([role, roleSet]) => {
+    let roleCount = 0;
+    Object.entries(roleSet).forEach(([cat, levels]) => {
+      Object.entries(levels).forEach(([lvl, arr]) => {
+        const c = arr.length;
+        roleCount += c;
+        stats.byDifficulty[lvl] += c;
+        stats.byCategory[cat] = (stats.byCategory[cat] || 0) + c;
       });
-    }
-  }
-
-  return allQuestions;
+    });
+    stats.byRole[role] = roleCount;
+    stats.total += roleCount;
+  });
+  return stats;
 }
 
-// 카테고리별 질문 가져오기
-function getQuestionsByCategory(category, difficulty = null) {
-  if (!EXTENDED_QUESTIONS[category]) return [];
+console.log("Question Database Stats:", getQuestionStats());
 
-  if (difficulty) {
-    return EXTENDED_QUESTIONS[category][difficulty] || [];
-  }
-
-  // 모든 난이도의 질문 반환
-  return [
-    ...EXTENDED_QUESTIONS[category].beginner,
-    ...EXTENDED_QUESTIONS[category].intermediate,
-    ...EXTENDED_QUESTIONS[category].advanced
-  ];
+if (typeof window !== "undefined") {
+  window.EXTENDED_QUESTIONS = EXTENDED_QUESTIONS;
 }
 
-// 랜덤 질문 선택 (난이도 균형 맞춰서)
-function getRandomQuestions(count = 10) {
-  const allQuestions = getAllQuestions();
-  const shuffled = allQuestions.sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
-}
-
-// Export for use in game
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined") {
   module.exports = {
     EXTENDED_QUESTIONS,
-    getAllQuestions,
-    getQuestionsByCategory,
-    getRandomQuestions
+    buildRoleQuestions,
+    ROLE_META,
+    BASE_TEMPLATES,
   };
 }

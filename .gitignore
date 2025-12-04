@@ -1,17 +1,10 @@
-# IDE files
-.vscode/
-.idea/
+# API 키 설정 파일
+js/config.local.js
 
-# OS files
+# 프롬프트 파일 (API 키 포함)
+*.txt
+
+# 일반적인 무시 파일
 .DS_Store
 Thumbs.db
-
-# Dependencies
-node_modules/
-
-# Logs
 *.log
-
-# Temp files
-*.tmp
-*~

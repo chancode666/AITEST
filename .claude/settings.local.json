@@ -1,7 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(where CLAUDE)",
+      "Bash(echo:*)",
+      "Bash(Get-Alias CLAUDE -ErrorAction SilentlyContinue)",
+      "Bash(powershell -NoProfile -Command \"& {Get-Content ''$env:USERPROFILE\\Documents\\PowerShell\\Microsoft.PowerShell_profile.ps1''}\")",
+      "Bash(powershell -Command \"Test-Path $PROFILE\")",
+      "Bash(powershell -Command \"$PROFILE\")",
+      "Bash(dir:*)",
+      "Bash(cat:*)",
+      "Bash(git remote set-url:*)"
     ],
     "deny": [],
     "ask": []
