@@ -21,6 +21,43 @@ const AIFeedback = {
         return names[role] || '일반';
     },
 
+    // 직무별 AI 활용 시나리오 (구체적 예시)
+    getRoleScenarios(role) {
+        const scenarios = {
+            'developer': {
+                daily: ['코드 리뷰 자동화', 'API 문서 생성', '버그 원인 분석', '테스트 케이스 작성'],
+                advanced: ['아키텍처 설계 검토', 'PR 요약 자동화', '레거시 코드 리팩토링 제안'],
+                prompts: ['이 코드의 시간복잡도를 분석해줘', '이 함수에 대한 단위 테스트 작성해줘', 'SQL 쿼리 최적화 방법 알려줘']
+            },
+            'marketer': {
+                daily: ['광고 카피 A/B 테스트', 'SNS 콘텐츠 캘린더', '경쟁사 분석 요약', '이메일 제목 최적화'],
+                advanced: ['퍼널 분석 인사이트 도출', '고객 페르소나 구체화', '캠페인 ROI 예측'],
+                prompts: ['20대 여성 타겟 인스타 캡션 5개 써줘', '이 랜딩페이지 헤드라인 개선해줘', '이탈률 높은 이유 분석해줘']
+            },
+            'sales': {
+                daily: ['미팅 요약 정리', '제안서 초안 작성', '고객 이의제기 대응', 'CRM 데이터 분석'],
+                advanced: ['딜 성사 확률 예측', '업셀링 타이밍 분석', '고객 이탈 징후 감지'],
+                prompts: ['이 미팅 녹취록 핵심만 요약해줘', '가격 협상 이메일 초안 써줘', '이 고객사에 맞는 제안 포인트 뽑아줘']
+            },
+            'cs': {
+                daily: ['FAQ 답변 초안', '고객 불만 분류', '응대 스크립트 개선', '만족도 분석'],
+                advanced: ['VOC 트렌드 분석', '자동 응답 시나리오 설계', '에스컬레이션 기준 최적화'],
+                prompts: ['이 불만 고객에게 보낼 사과 메일 써줘', '자주 묻는 질문 10개 정리해줘', '이 리뷰 감정 분석해줘']
+            },
+            'designer': {
+                daily: ['디자인 피드백 요약', '컬러 팔레트 추천', 'UI 카피 작성', '레퍼런스 분석'],
+                advanced: ['사용자 테스트 인사이트 정리', '디자인 시스템 문서화', 'A/B 테스트 결과 해석'],
+                prompts: ['이 UI의 접근성 문제점 찾아줘', '이 브랜드에 맞는 톤앤매너 정의해줘', '모바일 UX 개선점 3가지 알려줘']
+            },
+            'general': {
+                daily: ['회의록 정리', '이메일 초안 작성', '보고서 요약', '일정 관리'],
+                advanced: ['프로젝트 리스크 분석', '의사결정 프레임워크 적용', '팀 생산성 분석'],
+                prompts: ['이 보고서 핵심 3줄로 요약해줘', '상사에게 보고할 이메일 써줘', '이 데이터에서 인사이트 뽑아줘']
+            }
+        };
+        return scenarios[role] || scenarios['general'];
+    },
+
     // 카테고리 한글명
     getCategoryKorean(cat) {
         const names = {
@@ -36,6 +73,7 @@ const AIFeedback = {
     // 종합 평가 프롬프트 생성 (GPT가 집중할 부분)
     buildPrompt(role, answers, totalScore) {
         const roleKorean = this.getRoleKorean(role);
+        const roleScenarios = this.getRoleScenarios(role);
         const grade = totalScore >= 90 ? 'S' : totalScore >= 80 ? 'A' : totalScore >= 70 ? 'B' : totalScore >= 60 ? 'C' : totalScore >= 50 ? 'D' : 'E';
 
         // 맞은/틀린 문제 분류
@@ -65,168 +103,102 @@ const AIFeedback = {
             }
         });
 
-        return `당신은 'AI RUSH: AI 활용 능력 진단 게임'의 **따뜻하고 친근한 AI 멘토**입니다.
-사용자가 테스트를 마쳤습니다. **공감하고 응원하는 톤**으로 결과를 전달해주세요.
+        // 난이도별 정답률 문자열
+        const diffAnalysis = Object.entries(diffStats)
+            .filter(([_, stat]) => stat.total > 0)
+            .map(([diff, stat]) => {
+                const diffKorean = diff === 'beginner' ? '기초' : diff === 'intermediate' ? '중급' : '고급';
+                const rate = Math.round(stat.correct / stat.total * 100);
+                return `${diffKorean}: ${stat.correct}/${stat.total} (${rate}%)`;
+            }).join(', ');
 
-## 당신의 성격
-- 옆자리 선배 같은 친근함
-- 절대 비판하지 않고, 성장 관점에서 이야기
-- 부드럽지만 핵심은 정확하게 전달
-- "~해야 해요"보다 "~해보시면 좋을 것 같아요" 스타일
+        // 문제별 상세 정보 구성
+        const questionsDetail = answers.map((a, idx) => {
+            const isCorrect = a.correct === a.userSel;
+            const diffKorean = a.difficulty === 'beginner' ? '기초' : a.difficulty === 'advanced' ? '고급' : '중급';
+            return `${idx + 1}번: "${a.title}" [${this.getCategoryKorean(a.cat)}/${diffKorean}] - ${isCorrect ? 'O 정답' : 'X 오답'}`;
+        }).join('\n');
+
+        // 가장 점수 높은/낮은 카테고리 찾기
+        let bestCat = null, worstCat = null;
+        let bestScore = -1, worstScore = 101;
+        Object.entries(catStats).forEach(([cat, stat]) => {
+            const score = Math.round(stat.correct / stat.total * 100);
+            if (score > bestScore) { bestScore = score; bestCat = cat; }
+            if (score < worstScore) { worstScore = score; worstCat = cat; }
+        });
+
+        // 다음 등급 계산
+        const nextGrade = grade === 'E' ? 'C' : grade === 'D' ? 'B' : grade === 'C' ? 'A' : grade === 'B' ? 'A' : 'S';
+        const gradeGap = grade === 'E' ? 30 : grade === 'D' ? 20 : 10;
+
+        // 특수 케이스 체크
+        const isPerfectScore = wrongQuestions.length === 0;
+        const isNearPerfect = wrongQuestions.length <= 2 && totalScore >= 80; // A등급 (1-2개 틀림)
+        const isVeryLow = correctQuestions.length <= 2; // 0-2개만 맞춤
+
+        return `당신은 '퍼널뱅크 AI 멘토'입니다. 퍼널뱅크는 직무별 AI 활용 교육 서비스입니다.
+사용자의 AI 활용 능력 진단 결과를 분석하고, 퍼널뱅크 과정과 자연스럽게 연결해주세요.
 
 ## 사용자 정보
-- 직무: ${roleKorean}
-- 점수: ${totalScore}점 (10문제 중 ${correctQuestions.length}개 정답)
-- 등급: ${grade}
+- 직무: ${roleKorean} | 점수: ${totalScore}점 | 등급: ${grade}
+- 강점: ${this.getCategoryKorean(bestCat)}(${bestScore}%) | 약점: ${this.getCategoryKorean(worstCat)}(${worstScore}%)
+- 난이도별: ${diffAnalysis}
 
-## 성적 데이터
-${Object.entries(catStats).map(([cat, stat]) => {
-    const score = Math.round(stat.correct / stat.total * 100);
-    return `- ${this.getCategoryKorean(cat)}: ${stat.correct}/${stat.total} (${score}%)`;
-}).join('\n')}
+## 문제 결과
+${questionsDetail}
 
-## 틀린 문제
-${wrongQuestions.length > 0 ? wrongQuestions.map(q => `- [${this.getCategoryKorean(q.cat)}] ${q.title}`).join('\n') : '전부 정답!'}
+## 맞은 문제: ${correctQuestions.map(q => `${answers.indexOf(q)+1}번 "${q.title}"`).join(', ') || '없음'}
+## 틀린 문제: ${wrongQuestions.map(q => `${answers.indexOf(q)+1}번 "${q.title}"`).join(', ') || '없음'}
 
----
+## 핵심 규칙
+1. **문제 제목 정확히 복사** - 임의 생성 금지, 위 목록에서만 인용
+2. **patternAnalysis에 반드시 문제번호+제목 포함** (예: "3번 '실제제목'에서...")
+3. **${roleKorean} 실무 맥락 활용**: ${roleScenarios.daily.slice(0,2).join(', ')}
+4. **친근한 톤**: "~하셨네요", "~해보시면 어떨까요?"
+5. **반복 표현 금지**: "정말 대단해요", "상위 1%" 등 한 번만 사용
+6. **뜬금없는 비유 금지**: 과일, 날씨, 산 등 X
+7. **퍼널뱅크 자연스럽게 연결**: 강압적이지 않게, 도움이 될 수 있다는 톤으로
 
-## 작성 가이드 (풍성하고 구체적으로!)
+## 특수 케이스
+${isPerfectScore ? '**만점**: "아쉬운/채우면" 금지, 도전/확장 톤으로' : ''}
+${isNearPerfect ? `**A등급**: 틀린 ${wrongQuestions.length}개만 집중` : ''}
+${isVeryLow ? '**저점수**: 격려 위주, growthAreas 1개만' : ''}
 
-### 1. 전체 진단 (overallDiagnosis)
-**4-5문장**으로 스토리텔링하듯 써주세요:
-- 첫문장: 테스트 완주 인정 ("바쁘신 중에 시간 내주셔서 감사해요", "여기까지 오신 것만으로도 이미 한 발 앞서신 거예요")
-- 둘째문장: 전체적인 인상 ("전체적으로 보니까~", "결과를 쭉 보면서 느낀 건데요~")
-- 셋째문장: 구체적인 강점 언급 (어떤 영역이 좋았는지)
-- 넷째문장: 살짝 아쉬운 점 (부드럽게)
-- 다섯째문장: 희망적 마무리
-
-### 2. 오늘의 하이라이트 (todayHighlight) - 새 섹션!
-가장 인상 깊었던 순간 **1가지**를 구체적으로 짚어주세요:
-- questionNumber: 몇 번 문제인지 (1-10)
-- title: 그 문제의 핵심 키워드
-- comment: 왜 인상적이었는지 2-3문장으로 설명
-  예: "5번 문제, 고급 난이도였는데 정확하게 맞추셨어요! 이런 판단력이 실무에서 빛을 발할 거예요. ${roleKorean} 업무에서 AI를 쓸 때 이런 감각이 정말 중요하거든요."
-
-### 3. 만약 시뮬레이션 (whatIfSimulation) - 새 섹션!
-"만약 ~했다면" 형식으로 동기부여:
-- scenario: "만약 [약점 영역] 문제 2개만 더 맞추셨다면, [더 높은 등급]이었을 거예요!"
-- encouragement: "정말 아깝죠? 근데 이건 금방 채울 수 있는 부분이에요."
-- tip: 그 영역을 빠르게 채우는 실용적 팁 1줄
-
-### 4. 역량 프로파일 (competencyProfile)
-카테고리별로 **구체적 문제 언급**하며:
-- score: 점수
-- level: "강점" / "보통" / "성장중"
-- analysis: **3-4문장**으로 풍성하게 (어떤 문제에서 어떤 판단을 잘했는지/아쉬웠는지)
-- insight: 이 영역이 ${roleKorean} 실무에서 왜 중요한지 1문장
-- recommendation: 친근한 조언 1문장
-
-### 5. 패턴 분석 (patternAnalysis)
-**3-4가지** 인사이트를 구체적으로:
-- 비유를 활용해주세요 ("마치 ~처럼", "지금 상태는 ~같아요")
-- 구체적 문제 번호 언급해도 좋아요
-- 예: "프롬프트 영역에서 보여주신 센스, 특히 역할 부여하는 방식이 인상적이었어요. 3번 문제에서 그 감각이 잘 드러났어요."
-
-### 6. 강점 TOP 3 (topStrengths)
-**구체적 문제/상황과 연결**해서 칭찬:
-- 단순히 "프롬프트 잘함" X
-- "3번 문제에서 보여주신 것처럼, AI에게 역할을 부여하는 감각이 뛰어나세요" O
-
-### 7. 성장 포인트 TOP 3 (growthAreas)
-**긍정적으로 + 구체적 해결책**:
-- "~이 부족해요" X
-- "~를 익히시면 7번 같은 문제도 거뜬히 맞추실 수 있어요. 사실 이건 한 번만 개념 잡으면 금방이에요." O
-
-### 8. 액션 플랜 (actionPlan)
-- thisWeek: **구체적이고 바로 실천 가능한 것** ("오늘 ChatGPT 열어서 '~' 프롬프트 한 번 써보세요")
-- thisMonth: 한 달 후 달라질 구체적 모습
-- learningKeywords: 검색해볼 키워드 3개
-
-### 9. 다음 단계 제안 (funnelbankPitch)
-**5-6문장**으로 자연스럽게:
-- 첫문장: 공감 ("혼자 배우시려면 막막하실 수 있어요" 등)
-- 둘째문장: 약점 영역 연결 ("방금 아쉬웠던 [영역], 사실 체계적으로 배우면 금방이에요")
-- 셋째문장: 퍼널뱅크 소개 (${roleKorean} 맞춤 과정 있다고)
-- 넷째문장: 구체적 이득 (시간 절약, 업무 효율)
-- 다섯째문장: 사회적 증거 ("이미 많은 ${roleKorean}분들이 수강하고 계세요")
-- 여섯째문장: 부드러운 CTA
-
-### 10. 마무리 (closingMessage)
-**2문장**으로 따뜻하게:
-- 첫문장: 오늘 테스트 수고 인정
-- 둘째문장: 앞으로의 성장 응원
-
----
-
-## 등급별 톤
-${this.getGradeToneGuide(grade, roleKorean)}
-
----
-
-## 응답 형식
-반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트 없이 순수 JSON만 출력하세요.
-
+## JSON 형식 (마크다운 코드블록 없이 순수 JSON만)
 {
   "grade": "${grade}",
-  "title": "등급에 맞는 한글 타이틀 (예: AI 마스터, 성장하는 챌린저 등)",
-  "shortMessage": "SNS 공유용 한줄 (15자 이내, 예: '프롬프트의 달인!')",
-
-  "overallDiagnosis": "4-5문장의 스토리텔링형 종합 진단",
-
+  "title": "등급 타이틀 (예: AI 마스터, 스페셜리스트 등)",
+  "shortMessage": "15자 이내 공유용",
+  "overallDiagnosis": "4-5문장, 맞은 문제 제목 구체적으로 언급",
   "todayHighlight": {
-    "questionNumber": 1-10,
-    "title": "해당 문제의 핵심 키워드",
-    "comment": "2-3문장으로 왜 인상적이었는지 설명"
+    "questionNumber": 맞은문제번호,
+    "title": "위 맞은 문제에서 정확히 복사",
+    "comment": "2-3문장 (난이도 언급 + ${roleKorean} 실무 연결)"
   },
-
   "whatIfSimulation": {
-    "scenario": "만약 ~했다면 ~등급이었을 거예요!",
-    "encouragement": "아깝지만 금방 채울 수 있어요 식의 격려",
-    "tip": "그 영역 빠르게 채우는 실용적 팁"
+    "scenario": "${isPerfectScore ? '팀원 가르치기 시나리오' : `${nextGrade}등급 점프 시나리오`}",
+    "encouragement": "격려",
+    "tip": "실천 팁"
   },
-
   "competencyProfile": {
-    "practical": {
-      "score": 0-100,
-      "level": "강점/보통/성장중",
-      "analysis": "3-4문장 풍성한 분석 (구체적 문제 언급)",
-      "insight": "이 영역이 실무에서 왜 중요한지",
-      "recommendation": "친근한 조언 1문장"
-    },
-    "prompt": { "score": 0-100, "level": "...", "analysis": "...", "insight": "...", "recommendation": "..." },
-    "tools": { "score": 0-100, "level": "...", "analysis": "...", "insight": "...", "recommendation": "..." },
-    "ethics": { "score": 0-100, "level": "...", "analysis": "...", "insight": "...", "recommendation": "..." },
-    "advanced": { "score": 0-100, "level": "...", "analysis": "...", "insight": "...", "recommendation": "..." }
+    "practical": {"score": 점수, "level": "강점/보통/성장중", "analysis": "2문장"},
+    "prompt": {"score": 점수, "level": "...", "analysis": "..."},
+    "tools": {"score": 점수, "level": "...", "analysis": "..."},
+    "ethics": {"score": 점수, "level": "...", "analysis": "..."},
+    "advanced": {"score": 점수, "level": "...", "analysis": "..."}
   },
-
-  "patternAnalysis": [
-    "구체적 패턴 인사이트 1 (비유 활용, 문제번호 언급 가능)",
-    "구체적 패턴 인사이트 2",
-    "구체적 패턴 인사이트 3",
-    "구체적 패턴 인사이트 4 (선택)"
-  ],
-
-  "topStrengths": [
-    "구체적 문제/상황과 연결된 강점 1",
-    "구체적 문제/상황과 연결된 강점 2",
-    "구체적 문제/상황과 연결된 강점 3"
-  ],
-
-  "growthAreas": [
-    "긍정적 프레이밍 + 구체적 해결책 1",
-    "긍정적 프레이밍 + 구체적 해결책 2",
-    "긍정적 프레이밍 + 구체적 해결책 3"
-  ],
-
+  "patternAnalysis": ["X번 '제목'에서 ~한 성향이 보여요 (문제번호+제목 필수!)", "...", "..."],
+  "topStrengths": ["맞은 문제 연결 강점1", "강점2", "강점3"],
+  "growthAreas": ["긍정 프레이밍 성장포인트1", "...", "..."],
   "actionPlan": {
-    "thisWeek": "오늘 당장 실천 가능한 구체적 과제",
-    "thisMonth": "한 달 후 달라질 구체적 모습",
-    "learningKeywords": ["키워드1", "키워드2", "키워드3"]
+    "thisWeek": "'${roleScenarios.prompts[0]}' 같은 프롬프트 써보기",
+    "thisMonth": "한 달 후 목표",
+    "learningKeywords": ["${roleKorean} AI", "키워드2", "키워드3"]
   },
+  "funnelbankPitch": "퍼널뱅크 ${roleKorean} 맞춤 과정 소개 4-5문장 (테스트 결과와 연결, 구체적 혜택 언급)",
 
-  "funnelbankPitch": "5-6문장의 자연스러운 퍼널뱅크 소개 (공감-약점연결-소개-이득-사회적증거-CTA)",
-
-  "closingMessage": "2문장의 따뜻한 마무리"
+  "closingMessage": "2문장 따뜻한 마무리"
 }`;
     },
 
@@ -280,15 +252,15 @@ ${this.getGradeToneGuide(grade, roleKorean)}
                     messages: [
                         {
                             role: 'system',
-                            content: '당신은 AI 활용 능력 진단 결과를 분석하는 친절하고 따뜻한 AI 멘토입니다. 사용자가 기분 좋게 결과를 받아들이면서도 성장 의지를 갖도록 피드백합니다. 반드시 유효한 JSON 형식으로만 응답하세요. 마크다운 코드블록 없이 순수 JSON만 출력하세요.'
+                            content: '당신은 퍼널뱅크의 AI 멘토입니다. 퍼널뱅크는 직무별 AI 활용 교육 서비스입니다. 사용자가 기분 좋게 결과를 받아들이면서도 퍼널뱅크 과정에 관심을 갖도록 자연스럽게 안내합니다. 반드시 유효한 JSON 형식으로만 응답하세요. 마크다운 코드블록 없이 순수 JSON만 출력하세요. 문제 제목은 반드시 제공된 데이터에서 그대로 복사하세요.'
                         },
                         {
                             role: 'user',
                             content: prompt
                         }
                     ],
-                    temperature: 0.75,
-                    max_tokens: 3000
+                    temperature: 0.6,
+                    max_tokens: 2500
                 })
             });
 

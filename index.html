@@ -494,6 +494,107 @@
             padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;
         }
 
+        /* AI 멘토 캐릭터 */
+        .mentor-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .mentor-avatar {
+            flex-shrink: 0;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00f3ff 0%, #0066ff 50%, #00f3ff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: mentor-glow 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+        .mentor-avatar::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00f3ff, #0066ff, #00f3ff);
+            z-index: -1;
+            animation: rotate-border 3s linear infinite;
+        }
+        .mentor-avatar-inner {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0a1020 0%, #1a2040 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .mentor-face {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        .mentor-eyes {
+            display: flex;
+            gap: 8px;
+        }
+        .mentor-eye {
+            width: 6px;
+            height: 6px;
+            background: #00f3ff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #00f3ff;
+            animation: blink 4s ease-in-out infinite;
+        }
+        .mentor-mouth {
+            width: 12px;
+            height: 6px;
+            border: 2px solid #00f3ff;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            margin-top: 2px;
+            box-shadow: 0 0 6px #00f3ff;
+        }
+        .mentor-speech {
+            flex: 1;
+            position: relative;
+            background: rgba(0, 100, 150, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            border-left: 3px solid var(--neon-cyan);
+        }
+        .mentor-speech::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 20px;
+            border: 8px solid transparent;
+            border-right-color: rgba(0, 100, 150, 0.1);
+        }
+        .mentor-name {
+            color: var(--neon-cyan);
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        @keyframes mentor-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 243, 255, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(0, 243, 255, 0.6), 0 0 40px rgba(0, 102, 255, 0.3); }
+        }
+        @keyframes rotate-border {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
         /* ========== MOBILE RESPONSIVE ========== */
         @media (max-width: 768px) {
             /* 타이틀 */
@@ -583,6 +684,33 @@
                 width: 180px;
                 font-size: 0.7rem;
                 padding: 10px;
+            }
+
+            /* AI 멘토 모바일 */
+            .mentor-avatar {
+                width: 50px;
+                height: 50px;
+            }
+            .mentor-avatar-inner {
+                width: 44px;
+                height: 44px;
+            }
+            .mentor-eye {
+                width: 5px;
+                height: 5px;
+            }
+            .mentor-eyes {
+                gap: 6px;
+            }
+            .mentor-mouth {
+                width: 10px;
+                height: 5px;
+            }
+            .mentor-speech {
+                padding: 12px;
+            }
+            .mentor-name {
+                font-size: 0.7rem;
             }
 
             /* 문제 분석 카드 */
@@ -835,8 +963,23 @@
 
                 <!-- 2. AI Mentor Message (Overall Feedback) -->
                 <div class="holo-card">
-                    <div class="h-title"><span>@</span> AI MENTOR</div>
-                    <div class="action-box" id="ai-message" style="border-left-color: var(--neon-blue);">Loading...</div>
+                    <div class="mentor-container">
+                        <div class="mentor-avatar">
+                            <div class="mentor-avatar-inner">
+                                <div class="mentor-face">
+                                    <div class="mentor-eyes">
+                                        <div class="mentor-eye"></div>
+                                        <div class="mentor-eye"></div>
+                                    </div>
+                                    <div class="mentor-mouth"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mentor-speech">
+                            <div class="mentor-name">FUNNELBANK AI MENTOR</div>
+                            <div id="ai-message" style="color:#ddd; font-size:0.95rem; line-height:1.7;">Loading...</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 2.5 오늘의 하이라이트 -->
@@ -861,13 +1004,23 @@
                     <div id="strengths-list" class="strengths-section" style="background:transparent; border:none; padding:0;">
                         <!-- JS injected -->
                     </div>
+                    <div id="strengths-cta" style="margin-top:15px; padding-top:15px; border-top:1px dashed rgba(0,243,255,0.2); display:none;">
+                        <a href="https://funnelbank.com" target="_blank" style="color:#88ccff; font-size:0.85rem; text-decoration:none;">
+                            이 강점을 퍼널뱅크에서 더 키워보세요 &rarr;
+                        </a>
+                    </div>
                 </div>
 
                 <!-- 4. 성장 포인트 -->
-                <div class="holo-card">
-                    <div class="h-title"><span>^</span> 앞으로 이것만 채우면 돼요</div>
+                <div class="holo-card" id="growth-card">
+                    <div class="h-title"><span>^</span> <span id="growth-title">앞으로 이것만 채우면 돼요</span></div>
                     <div id="improvements-list" class="improvements-section" style="background:transparent; border:none; padding:0;">
                         <!-- JS injected -->
+                    </div>
+                    <div id="growth-cta" style="margin-top:15px; padding-top:15px; border-top:1px dashed rgba(255,200,0,0.2); display:none;">
+                        <a href="https://funnelbank.com" target="_blank" style="color:#ffd700; font-size:0.85rem; text-decoration:none;">
+                            퍼널뱅크에서 이 부분 집중 학습하기 &rarr;
+                        </a>
                     </div>
                 </div>
 
@@ -896,6 +1049,12 @@
                     <div id="action-plan-content" style="display:flex; flex-direction:column; gap:15px;">
                         <!-- JS injected -->
                     </div>
+                    <div style="margin-top:20px; padding:15px; background:rgba(0,243,255,0.05); border-radius:8px; border:1px dashed rgba(0,243,255,0.2);">
+                        <div style="color:#88ccff; font-size:0.85rem; margin-bottom:8px;">퍼널뱅크 추천 학습 경로</div>
+                        <div style="color:#aaa; font-size:0.8rem; line-height:1.5;">
+                            혼자 하기 막막하다면? 퍼널뱅크에서 직무별 맞춤 커리큘럼으로 체계적으로 배워보세요.
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 8. 다음 단계 (퍼널뱅크) -->
@@ -903,6 +1062,11 @@
                     <div class="h-title" style="color: #88ccff;"><span>&gt;</span> 다음 단계가 궁금하다면</div>
                     <div id="funnelbank-pitch" style="font-size:0.95rem; line-height:1.8; color:#ccc;">
                         <!-- JS injected -->
+                    </div>
+                    <div style="margin-top:20px; text-align:center;">
+                        <a href="https://funnelbank.com" target="_blank" rel="noopener" class="btn-cyber" style="display:inline-block; padding:12px 30px; border-color:#88ccff; color:#88ccff; text-decoration:none; font-weight:bold;">
+                            퍼널뱅크 무료 체험하기
+                        </a>
                     </div>
                 </div>
 
@@ -1454,12 +1618,23 @@ ${shortMessage ? `AI 코멘트: "${shortMessage}"` : ''}`;
                         <span>${s}</span>
                     </div>
                 `).join('');
+                // 강점 CTA 표시
+                document.getElementById('strengths-cta').style.display = 'block';
             } else {
                 strengthsList.innerHTML = '<div style="color:#888;">강점 항목이 아직 없습니다.</div>';
             }
 
             // 4. 개선 포인트
             const improvementsList = document.getElementById('improvements-list');
+            const growthTitle = document.getElementById('growth-title');
+
+            // 100% 점수일 때 제목 변경
+            if (score === 100) {
+                growthTitle.textContent = '다음 단계로 도약해볼까요?';
+            } else {
+                growthTitle.textContent = '앞으로 이것만 채우면 돼요';
+            }
+
             if (feedback.overall.improvements && feedback.overall.improvements.length > 0) {
                 improvementsList.innerHTML = feedback.overall.improvements.map(i => `
                     <div class="improvement-item">
@@ -1467,6 +1642,10 @@ ${shortMessage ? `AI 코멘트: "${shortMessage}"` : ''}`;
                         <span>${i}</span>
                     </div>
                 `).join('');
+                // 성장 CTA 표시 (100% 아닐 때만)
+                if (score < 100) {
+                    document.getElementById('growth-cta').style.display = 'block';
+                }
             } else {
                 improvementsList.innerHTML = '<div style="color:#888;">개선이 필요한 항목이 없습니다.</div>';
             }
@@ -1490,10 +1669,12 @@ ${shortMessage ? `AI 코멘트: "${shortMessage}"` : ''}`;
                     const catData = feedback.categoryAnalysis[catKey] || { score: 0, feedback: '' };
                     const scoreClass = catData.score >= 70 ? 'high' : catData.score >= 40 ? 'mid' : 'low';
                     const tooltipText = catData.feedback || `${GAME_DATA.cats[catKey]}에 대한 피드백이 제공됩니다.`;
+                    // 0%일 때 "시작 전" 표시
+                    const scoreDisplay = catData.score === 0 ? '<span style="font-size:0.9rem;">시작 전</span>' : `${catData.score}%`;
                     return `
                         <div class="cat-feedback-card">
                             <div class="cat-feedback-name">${GAME_DATA.cats[catKey]}</div>
-                            <div class="cat-feedback-score ${scoreClass}">${catData.score}%</div>
+                            <div class="cat-feedback-score ${scoreClass}">${scoreDisplay}</div>
                             <div class="cat-tooltip">${tooltipText}</div>
                         </div>
                     `;
