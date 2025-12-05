@@ -39,7 +39,7 @@
             transform: rotateX(10deg) translateY(-150%); /* Start hidden */
             transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
             pointer-events: auto;
-            max-width: 800px; width: 95%; margin: 0 auto;
+            max-width: 800px; width: 92%; margin: 0 auto;
             border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
             position: relative;
         }
@@ -54,14 +54,15 @@
         @keyframes scan { 0% { top: 0; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
 
         #q-header {
-            display: flex; justify-content: space-between; align-items: center;
-            font-family: 'Orbitron', sans-serif; margin-bottom: 10px;
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Orbitron', sans-serif; margin-bottom: 12px;
         }
-        #q-badge {
-            color: var(--neon-cyan); font-size: 0.9rem; letter-spacing: 2px;
-            border: 1px solid var(--neon-cyan); padding: 2px 8px; border-radius: 4px;
+        #q-progress {
+            color: var(--neon-cyan); font-size: 1.1rem; letter-spacing: 3px;
+            padding: 6px 20px; border-radius: 20px;
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid rgba(0, 243, 255, 0.3);
         }
-        #q-timer { color: var(--neon-red); font-weight: 700; }
 
         #q-title {
             font-size: 1.15rem; font-weight: 700; line-height: 1.5; text-align: center;
@@ -87,7 +88,8 @@
             pointer-events: auto;
         }
         .screen-content {
-            width: 100%; max-width: 700px; padding: 40px 20px; text-align: center;
+            width: 100%; max-width: 700px; padding: 40px 24px; text-align: center;
+            box-sizing: border-box;
         }
 
         /* Intro Style */
@@ -115,8 +117,9 @@
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 16px;
-            padding: 24px;
+            padding: 20px 16px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+            margin: 0 -8px;
         }
         .role-panel-header {
             font-size: 1rem;
@@ -380,8 +383,8 @@
         .qa-number.correct { background: rgba(0, 243, 255, 0.2); color: var(--neon-cyan); }
         .qa-number.wrong { background: rgba(255, 0, 85, 0.2); color: var(--neon-red); }
         .qa-title { flex: 1; margin: 0 15px; font-size: 0.95rem; color: #ddd; }
-        .qa-toggle { color: #666; font-size: 1.2rem; transition: transform 0.3s; }
-        .qa-card.open .qa-toggle { transform: rotate(180deg); }
+        .qa-toggle { color: #888; font-size: 0.8rem; padding: 4px 8px; border: 1px solid #444; border-radius: 4px; transition: all 0.3s; }
+        .qa-card.open .qa-toggle { background: rgba(0,243,255,0.1); border-color: var(--neon-cyan); color: var(--neon-cyan); }
         .qa-body {
             max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;
             border-top: 1px solid transparent;
@@ -620,6 +623,10 @@
                 font-size: 0.65rem;
                 padding: 3px 6px;
             }
+            .role-panel {
+                padding: 16px 12px;
+                margin: 0;
+            }
 
             /* 버튼 */
             .btn-cyber {
@@ -627,29 +634,35 @@
                 font-size: 1rem;
             }
 
-            /* HUD 패널 */
+            /* HUD 패널 (게임 중 문제) */
             #hud-panel {
-                padding: 15px;
-                width: 98%;
+                padding: 16px 12px;
+                width: 94%;
+                border-radius: 0 0 16px 16px;
             }
             #q-title {
                 font-size: 1rem;
                 line-height: 1.4;
             }
             .ar-opt {
-                padding: 8px 5px;
-                font-size: 0.75rem;
+                padding: 10px 8px;
+                font-size: 0.8rem;
+                border-radius: 10px;
             }
             .ar-opt .num {
                 font-size: 1rem;
             }
 
-            /* 결과 화면 */
+            /* 결과 화면 - 전체 컨테이너 */
             .screen-content {
-                padding: 20px 12px;
+                padding: 24px 16px;
+            }
+            .report-grid {
+                gap: 16px;
             }
             .holo-card {
-                padding: 15px;
+                padding: 16px 14px;
+                border-radius: 12px;
             }
             .h-title {
                 font-size: 0.8rem;
@@ -771,38 +784,55 @@
         }
 
         @media (max-width: 480px) {
-            /* 더 작은 화면 */
+            /* 더 작은 화면 - 전체 여백 조정 */
+            .screen-content {
+                padding: 20px 14px;
+            }
             .glitch-title {
-                font-size: 2rem;
+                font-size: 1.8rem;
             }
             .role-grid {
                 grid-template-columns: 1fr;
+                gap: 8px;
             }
             .role-card {
                 flex-direction: row;
                 align-items: center;
                 gap: 12px;
+                padding: 14px 12px;
             }
             .role-chip {
                 margin-bottom: 0;
+            }
+            .role-panel {
+                padding: 14px 10px;
             }
 
             .category-feedback-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
 
+            /* 게임 중 HUD */
+            #hud-panel {
+                width: 96%;
+                padding: 14px 10px;
+            }
             .ar-options {
                 flex-direction: column;
-                gap: 6px;
+                gap: 8px;
             }
             .ar-opt {
                 flex-direction: row;
                 justify-content: flex-start;
                 text-align: left;
-                gap: 10px;
+                gap: 12px;
+                padding: 14px 12px;
+                border-radius: 10px;
             }
             .ar-opt .num {
                 margin-bottom: 0;
+                font-size: 1.1rem;
+                min-width: 32px;
             }
 
             /* 결과 화면 하단 버튼 */
@@ -811,6 +841,120 @@
             }
             .screen-content > div:last-child .btn-cyber {
                 width: 100%;
+            }
+
+            /* 점수 표시 */
+            .score-val {
+                font-size: 2.2rem;
+            }
+
+            /* 결과 카드들 */
+            .report-grid {
+                gap: 14px;
+            }
+            .holo-card {
+                padding: 14px 12px;
+            }
+
+            /* AI 멘토 메시지 */
+            #ai-message {
+                font-size: 0.85rem !important;
+                line-height: 1.6 !important;
+            }
+
+            /* 문제 상세 분석 */
+            .qa-card {
+                border-radius: 10px;
+            }
+            .qa-header {
+                padding: 12px;
+            }
+            .qa-title {
+                font-size: 0.8rem;
+                margin: 0 8px;
+                line-height: 1.4;
+            }
+            .qa-toggle {
+                font-size: 0.7rem;
+                padding: 3px 6px;
+                white-space: nowrap;
+            }
+            .qa-content {
+                padding: 12px;
+            }
+            .qa-choice {
+                font-size: 0.78rem;
+                padding: 12px;
+                line-height: 1.5;
+                border-radius: 8px;
+            }
+            .qa-analysis {
+                font-size: 0.78rem;
+                line-height: 1.6;
+                padding: 12px;
+            }
+            .qa-card.open .qa-body {
+                max-height: 800px;
+            }
+
+            /* 하이라이트/시뮬레이션 카드 */
+            .holo-card {
+                padding: 12px;
+            }
+            .h-title {
+                font-size: 0.75rem;
+                margin-bottom: 10px;
+            }
+
+            /* 강점/개선점 */
+            .strength-item, .improvement-item {
+                font-size: 0.8rem;
+                padding: 8px 0;
+            }
+
+            /* 액션플랜 */
+            #action-plan-content {
+                gap: 10px;
+            }
+
+            /* 퍼널뱅크 피치 */
+            #funnelbank-pitch {
+                font-size: 0.85rem !important;
+                line-height: 1.6 !important;
+            }
+
+            /* 필터 바 */
+            .filter-bar {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .filter-btn {
+                padding: 5px 10px;
+                font-size: 0.7rem;
+            }
+
+            /* 레이더 차트 축소 */
+            #radar-container {
+                height: 180px;
+            }
+        }
+
+        /* 아주 작은 화면 (SE, 구형 기기) */
+        @media (max-width: 375px) {
+            .glitch-title {
+                font-size: 1.5rem;
+            }
+            #q-title {
+                font-size: 0.9rem;
+            }
+            .ar-opt {
+                font-size: 0.7rem;
+            }
+            .qa-title {
+                font-size: 0.75rem;
+            }
+            .score-val {
+                font-size: 2rem;
             }
         }
 
@@ -828,6 +972,27 @@
             }
         }
 
+        /* 터치 피드백 추가 */
+        @media (pointer: coarse) {
+            .ar-opt:active {
+                transform: scale(0.98);
+                background: rgba(0, 243, 255, 0.15);
+            }
+            .qa-header:active {
+                background: rgba(255,255,255,0.05);
+            }
+            .btn-cyber:active {
+                transform: scale(0.98);
+            }
+            .role-card:active {
+                transform: scale(0.98);
+                border-color: var(--neon-cyan);
+            }
+            .filter-btn:active {
+                transform: scale(0.95);
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -840,9 +1005,7 @@
         <!-- HUD Panel -->
         <div id="hud-panel">
             <div id="q-header">
-                <span id="q-badge">SYSTEM ALERT</span>
-                <span id="q-progress" style="color:var(--neon-yellow); font-family:'Orbitron'; font-size:0.85rem;">1/10</span>
-                <span id="q-timer">LIVE</span>
+                <span id="q-progress">1 / 10</span>
             </div>
             <div id="q-title">Loading Data Stream...</div>
             <div class="ar-options" id="q-options">
@@ -1244,8 +1407,7 @@
 
             // AR HUD Update
             const hud = document.getElementById('hud-panel');
-            document.getElementById('q-badge').innerText = `DATA BLOCK ${GAME.quiz.idx+1}`;
-            document.getElementById('q-progress').innerText = `${GAME.quiz.idx+1}/${GAME.data.length}`;
+            document.getElementById('q-progress').innerText = `${GAME.quiz.idx+1} / ${GAME.data.length}`;
             document.getElementById('q-title').innerText = q.title;
             document.getElementById('q-options').innerHTML = q.options.map((o,i) => `
                 <div class="ar-opt">
@@ -1780,11 +1942,11 @@ ${shortMessage ? `AI 코멘트: "${shortMessage}"` : ''}`;
                 }).join('');
 
                 return `
-                    <div class="qa-card ${idx < 3 ? 'open' : ''}" onclick="this.classList.toggle('open')">
+                    <div class="qa-card ${idx < 3 ? 'open' : ''}" onclick="const t=this.querySelector('.qa-toggle'); this.classList.toggle('open'); t.textContent=this.classList.contains('open')?'접기':'자세히';">
                         <div class="qa-header">
                             <span class="qa-number ${isCorrect ? 'correct' : 'wrong'}">Q${idx + 1}</span>
                             <span class="qa-title">${originalQ.title}</span>
-                            <span class="qa-toggle">자세히</span>
+                            <span class="qa-toggle">${idx < 3 ? '접기' : '자세히'}</span>
                         </div>
                         <div class="qa-body">
                             <div class="qa-content">

@@ -112,13 +112,6 @@ const AIFeedback = {
                 return `${diffKorean}: ${stat.correct}/${stat.total} (${rate}%)`;
             }).join(', ');
 
-        // 문제별 상세 정보 구성
-        const questionsDetail = answers.map((a, idx) => {
-            const isCorrect = a.correct === a.userSel;
-            const diffKorean = a.difficulty === 'beginner' ? '기초' : a.difficulty === 'advanced' ? '고급' : '중급';
-            return `${idx + 1}번: "${a.title}" [${this.getCategoryKorean(a.cat)}/${diffKorean}] - ${isCorrect ? 'O 정답' : 'X 오답'}`;
-        }).join('\n');
-
         // 가장 점수 높은/낮은 카테고리 찾기
         let bestCat = null, worstCat = null;
         let bestScore = -1, worstScore = 101;
@@ -137,68 +130,97 @@ const AIFeedback = {
         const isNearPerfect = wrongQuestions.length <= 2 && totalScore >= 80; // A등급 (1-2개 틀림)
         const isVeryLow = correctQuestions.length <= 2; // 0-2개만 맞춤
 
+        // 문제별 상세 정보 JSON 배열 구성
+        const questionsDetailArray = answers.map((a, idx) => {
+            const isCorrect = a.correct === a.userSel;
+            const diffKorean = a.difficulty === 'beginner' ? '기초' : a.difficulty === 'advanced' ? '고급' : '중급';
+            return {
+                num: idx + 1,
+                title: a.title,
+                category: this.getCategoryKorean(a.cat),
+                difficulty: diffKorean,
+                result: isCorrect ? 'O' : 'X'
+            };
+        });
+
         return `당신은 '퍼널뱅크 AI 멘토'입니다. 퍼널뱅크는 직무별 AI 활용 교육 서비스입니다.
-사용자의 AI 활용 능력 진단 결과를 분석하고, 퍼널뱅크 과정과 자연스럽게 연결해주세요.
 
 ## 사용자 정보
-- 직무: ${roleKorean} | 점수: ${totalScore}점 | 등급: ${grade}
-- 강점: ${this.getCategoryKorean(bestCat)}(${bestScore}%) | 약점: ${this.getCategoryKorean(worstCat)}(${worstScore}%)
-- 난이도별: ${diffAnalysis}
+- 직무: ${roleKorean}
+- 점수: ${totalScore}점
+- 등급: ${grade}
+- 강점 카테고리: ${this.getCategoryKorean(bestCat)} (${bestScore}%)
+- 약점 카테고리: ${this.getCategoryKorean(worstCat)} (${worstScore}%)
+- 난이도별 정답률: ${diffAnalysis}
 
-## 문제 결과
-${questionsDetail}
+## 문제 결과 (JSON)
+${JSON.stringify(questionsDetailArray, null, 2)}
 
-## 맞은 문제: ${correctQuestions.map(q => `${answers.indexOf(q)+1}번 "${q.title}"`).join(', ') || '없음'}
-## 틀린 문제: ${wrongQuestions.map(q => `${answers.indexOf(q)+1}번 "${q.title}"`).join(', ') || '없음'}
+## 등급별 타이틀 규칙 (필수 준수)
+- 90점 이상 (S등급): "AI 마스터"
+- 80-89점 (A등급): "AI 스페셜리스트"
+- 70-79점 (B등급): "러닝 유저"
+- 70점 미만 (C/D/E등급): "성장형 유저"
 
 ## 핵심 규칙
-1. **문제 제목 정확히 복사** - 임의 생성 금지, 위 목록에서만 인용
-2. **patternAnalysis에 반드시 문제번호+제목 포함** (예: "3번 '실제제목'에서...")
+1. **문제 제목은 위 JSON에서 정확히 복사** - 임의 생성 절대 금지
+2. **patternAnalysis 형식**: "X번 '정확한제목'에서 ~한 성향이 보여요"
 3. **${roleKorean} 실무 맥락 활용**: ${roleScenarios.daily.slice(0,2).join(', ')}
 4. **친근한 톤**: "~하셨네요", "~해보시면 어떨까요?"
-5. **반복 표현 금지**: "정말 대단해요", "상위 1%" 등 한 번만 사용
-6. **뜬금없는 비유 금지**: 과일, 날씨, 산 등 X
+5. **반복 표현 금지**: 같은 칭찬 표현 한 번만 사용
+6. **뜬금없는 비유 금지**: 과일, 날씨, 산 등의 비유 사용 금지
 7. **퍼널뱅크 자연스럽게 연결**: 강압적이지 않게, 도움이 될 수 있다는 톤으로
 
-## 특수 케이스
-${isPerfectScore ? '**만점**: "아쉬운/채우면" 금지, 도전/확장 톤으로' : ''}
-${isNearPerfect ? `**A등급**: 틀린 ${wrongQuestions.length}개만 집중` : ''}
-${isVeryLow ? '**저점수**: 격려 위주, growthAreas 1개만' : ''}
+## 특수 케이스 처리
+${isPerfectScore ? `### 만점(100점) 케이스
+- "아쉬운", "채우면" 등의 표현 절대 금지
+- 도전/확장/심화 톤으로 작성
+- growthAreas: 다음 단계 도전 과제로 작성` : ''}
+${isNearPerfect ? `### A등급(1-2개 오답) 케이스
+- 틀린 ${wrongQuestions.length}개 문제에만 집중
+- 거의 완벽하다는 뉘앙스 유지` : ''}
+${isVeryLow ? `### 저점수 케이스
+- 격려 위주로 작성
+- growthAreas는 1개만 제시
+- 작은 성취도 크게 칭찬` : ''}
 
-## JSON 형식 (마크다운 코드블록 없이 순수 JSON만)
+## JSON 응답 형식 (마크다운 코드블록 없이 순수 JSON만 출력)
 {
   "grade": "${grade}",
-  "title": "등급 타이틀 (예: AI 마스터, 스페셜리스트 등)",
-  "shortMessage": "15자 이내 공유용",
-  "overallDiagnosis": "4-5문장, 맞은 문제 제목 구체적으로 언급",
+  "title": "위 등급별 타이틀 규칙에 따라 정확히 작성",
+  "shortMessage": "15자 이내 공유용 메시지",
+  "overallDiagnosis": "4-5문장. 맞은 문제 제목을 구체적으로 언급하며 종합 평가",
   "todayHighlight": {
-    "questionNumber": 맞은문제번호,
-    "title": "위 맞은 문제에서 정확히 복사",
-    "comment": "2-3문장 (난이도 언급 + ${roleKorean} 실무 연결)"
+    "questionNumber": "맞은 문제 중 하나의 번호",
+    "title": "해당 문제의 정확한 제목 (위 JSON에서 복사)",
+    "comment": "2-3문장. 난이도 언급 + ${roleKorean} 실무 연결"
   },
   "whatIfSimulation": {
-    "scenario": "${isPerfectScore ? '팀원 가르치기 시나리오' : `${nextGrade}등급 점프 시나리오`}",
-    "encouragement": "격려",
-    "tip": "실천 팁"
+    "scenario": "${isPerfectScore ? '팀원 멘토링/교육자 시나리오' : `${nextGrade}등급 달성 시나리오`}",
+    "encouragement": "격려 메시지",
+    "tip": "구체적 실천 팁"
   },
   "competencyProfile": {
-    "practical": {"score": 점수, "level": "강점/보통/성장중", "analysis": "2문장"},
-    "prompt": {"score": 점수, "level": "...", "analysis": "..."},
-    "tools": {"score": 점수, "level": "...", "analysis": "..."},
-    "ethics": {"score": 점수, "level": "...", "analysis": "..."},
-    "advanced": {"score": 점수, "level": "...", "analysis": "..."}
+    "practical": {"score": 0-100, "level": "강점/보통/성장중", "analysis": "2문장 분석"},
+    "prompt": {"score": 0-100, "level": "강점/보통/성장중", "analysis": "2문장 분석"},
+    "tools": {"score": 0-100, "level": "강점/보통/성장중", "analysis": "2문장 분석"},
+    "ethics": {"score": 0-100, "level": "강점/보통/성장중", "analysis": "2문장 분석"},
+    "advanced": {"score": 0-100, "level": "강점/보통/성장중", "analysis": "2문장 분석"}
   },
-  "patternAnalysis": ["X번 '제목'에서 ~한 성향이 보여요 (문제번호+제목 필수!)", "...", "..."],
-  "topStrengths": ["맞은 문제 연결 강점1", "강점2", "강점3"],
-  "growthAreas": ["긍정 프레이밍 성장포인트1", "...", "..."],
+  "patternAnalysis": [
+    "X번 '정확한문제제목'에서 ~한 성향이 보여요",
+    "Y번 '정확한문제제목'을 맞추신 걸 보니 ~를 잘 이해하고 계시네요",
+    "Z번 '정확한문제제목'에서 ~한 부분이 아쉬웠어요"
+  ],
+  "topStrengths": ["맞은 문제와 연결된 강점1", "강점2", "강점3"],
+  "growthAreas": ["긍정적으로 프레이밍한 성장포인트1", "성장포인트2", "성장포인트3"],
   "actionPlan": {
-    "thisWeek": "'${roleScenarios.prompts[0]}' 같은 프롬프트 써보기",
-    "thisMonth": "한 달 후 목표",
-    "learningKeywords": ["${roleKorean} AI", "키워드2", "키워드3"]
+    "thisWeek": "'${roleScenarios.prompts[0]}' 같은 프롬프트 직접 써보기",
+    "thisMonth": "한 달 후 달성 목표",
+    "learningKeywords": ["${roleKorean} AI 활용", "추천 키워드2", "추천 키워드3"]
   },
-  "funnelbankPitch": "퍼널뱅크 ${roleKorean} 맞춤 과정 소개 4-5문장 (테스트 결과와 연결, 구체적 혜택 언급)",
-
-  "closingMessage": "2문장 따뜻한 마무리"
+  "funnelbankPitch": "퍼널뱅크 ${roleKorean} 맞춤 과정 소개. 테스트 결과와 연결하여 4-5문장으로 자연스럽게 작성. 예: '${this.getCategoryKorean(worstCat)} 영역을 더 키우고 싶으시다면, 퍼널뱅크의 ${roleKorean} 맞춤 과정이 도움이 될 수 있어요. 실무에서 바로 쓸 수 있는 AI 활용법을 알려드려요.'",
+  "closingMessage": "2문장 따뜻한 마무리. 퍼널뱅크 언급 포함 권장"
 }`;
     },
 
